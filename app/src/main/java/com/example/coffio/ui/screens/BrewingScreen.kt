@@ -21,6 +21,7 @@ import com.example.coffio.ui.viewmodel.BrewingViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrewingScreen(
+    drinkId: Long,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BrewingViewModel = viewModel()
@@ -31,11 +32,15 @@ fun BrewingScreen(
     var showAddCoffeeDialog by remember { mutableStateOf(false) }
     var showAddSieveDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(drinkId) {
+        viewModel.initialize(drinkId)
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Brühmenü") },
+                title = { Text(viewModel.selectedDrink?.name ?: "Brühmenü") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(

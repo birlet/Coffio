@@ -12,6 +12,7 @@ import com.example.coffio.data.local.datastore.BrewPreferencesManager
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Sieve
+import com.example.coffio.data.local.entities.Drink
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -23,6 +24,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     private val coffeeDao = database.coffeeDao()
     private val sieveDao = database.sieveDao()
     private val brewDao = database.brewDao()
+    private val drinkDao = database.drinkDao()
     private val prefsManager = BrewPreferencesManager(application)
 
     val coffees: StateFlow<List<Coffee>> = coffeeDao.getAllCoffees()
@@ -33,6 +35,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
 
     var selectedCoffee by mutableStateOf<Coffee?>(null)
     var selectedSieve by mutableStateOf<Sieve?>(null)
+    var selectedDrink by mutableStateOf<Drink?>(null)
+    
     var temperature by mutableStateOf("")
     var coffeeWeight by mutableStateOf("")
     var targetYield by mutableStateOf("")
@@ -42,25 +46,50 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var brewTime by mutableStateOf("")
     var actualYield by mutableStateOf("")
 
-    init {
-        loadLastPreferences()
+    fun initialize(drinkId: Long) {
+        viewModelScope.launch {
+            if (drinkId != -1L) {
+                val drink = drinkDao.getDrinkById(drinkId)
+                selectedDrink = drink
+                drink?.let {
+                    temperature = it.defaultTemperature.toString()
+                    coffeeWeight = it.defaultCoffeeWeight.toString()
+                    targetYield = it.defaultTargetYield.toString()
+                    grindSize = it.defaultGrindSize.toString()
+                    tamperPressure = it.defaultTamperPressure.toString()
+                    milkVolume = it.defaultMilkVolume.toString()
+                    
+                    // Pre-select the sieve if one is defined for the drink
+                    if (it.defaultSieveId != null) {
+                        val sieveList = sieves.first { list -> list.isNotEmpty() }
+                        selectedSieve = sieveList.find { s -> s.id == it.defaultSieveId }
+                    }
+                }
+            }
+            loadLastPreferences()
+        }
     }
 
-    private fun loadLastPreferences() {
-        viewModelScope.launch {
-            val prefs = prefsManager.brewPreferencesFlow.first()
-            temperature = prefs.temperature.toString()
-            coffeeWeight = prefs.coffeeWeight.toString()
-            targetYield = prefs.targetYield.toString()
-            tamperPressure = prefs.tamperPressure.toString()
-            milkVolume = prefs.milkVolume.toString()
-            grindSize = prefs.grindSize.toString()
-            brewTime = prefs.brewTime.toString()
+    private suspend fun loadLastPreferences() {
+        val prefs = prefsManager.brewPreferencesFlow.first()
+        
+        // Only load prefs if they weren't set by the drink defaults
+        if (temperature.isEmpty()) temperature = prefs.temperature.toString()
+        if (coffeeWeight.isEmpty()) coffeeWeight = prefs.coffeeWeight.toString()
+        if (targetYield.isEmpty()) targetYield = prefs.targetYield.toString()
+        if (tamperPressure.isEmpty()) tamperPressure = prefs.tamperPressure.toString()
+        if (milkVolume.isEmpty()) milkVolume = prefs.milkVolume.toString()
+        if (grindSize.isEmpty()) grindSize = prefs.grindSize.toString()
+        if (brewTime.isEmpty()) brewTime = prefs.brewTime.toString()
 
-            // Try to match coffee and sieve from IDs
+        // Try to match coffee from IDs if not already set
+        if (selectedCoffee == null) {
             val coffeeList = coffees.first { it.isNotEmpty() }
             selectedCoffee = coffeeList.find { it.id == prefs.coffeeId }
+        }
 
+        // Try to match sieve from IDs if not already set by drink default
+        if (selectedSieve == null) {
             val sieveList = sieves.first { it.isNotEmpty() }
             selectedSieve = sieveList.find { it.id == prefs.sieveId }
         }

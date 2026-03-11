@@ -6,16 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.coffio.data.local.dao.BrewDao
 import com.example.coffio.data.local.dao.CoffeeDao
+import com.example.coffio.data.local.dao.DrinkDao
 import com.example.coffio.data.local.dao.SieveDao
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.Coffee
+import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
 
-@Database(entities = [Coffee::class, Sieve::class, Brew::class], version = 3, exportSchema = false)
+@Database(entities = [Coffee::class, Sieve::class, Brew::class, Drink::class], version = 5, exportSchema = false)
 abstract class CoffioDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun sieveDao(): SieveDao
     abstract fun brewDao(): BrewDao
+    abstract fun drinkDao(): DrinkDao
 
     companion object {
         @Volatile

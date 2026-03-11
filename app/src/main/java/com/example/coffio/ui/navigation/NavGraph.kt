@@ -2,8 +2,10 @@ package com.example.coffio.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.coffio.ui.screens.BrewingScreen
 import com.example.coffio.ui.screens.ChartsScreen
 import com.example.coffio.ui.screens.HistoryScreen
@@ -18,14 +20,21 @@ fun NavGraph(navController: NavHostController) {
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
-                onNavigateToBrewing = { navController.navigate(Screen.Brewing.route) },
+                onNavigateToBrewing = { drinkId ->
+                    navController.navigate(Screen.Brewing.createRoute(drinkId))
+                },
                 onNavigateToHistory = { navController.navigate(Screen.History.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToCharts = { navController.navigate(Screen.Charts.route) }
             )
         }
-        composable(Screen.Brewing.route) {
+        composable(
+            route = Screen.Brewing.route,
+            arguments = listOf(navArgument("drinkId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val drinkId = backStackEntry.arguments?.getLong("drinkId") ?: -1L
             BrewingScreen(
+                drinkId = drinkId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

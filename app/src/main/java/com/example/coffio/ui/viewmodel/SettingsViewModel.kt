@@ -5,15 +5,71 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coffio.data.ExportImportManager
+import com.example.coffio.data.local.CoffioDatabase
+import com.example.coffio.data.local.entities.Drink
+import com.example.coffio.data.local.entities.Sieve
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+    private val database = CoffioDatabase.getDatabase(application)
+    private val drinkDao = database.drinkDao()
+    private val sieveDao = database.sieveDao()
     private val exportImportManager = ExportImportManager(application)
+
+    val drinks: StateFlow<List<Drink>> = drinkDao.getAllDrinks()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val sieves: StateFlow<List<Sieve>> = sieveDao.getAllSieves()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _uiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Idle)
     val uiState: StateFlow<SettingsUiState> = _uiState
+
+    fun addDrink(drink: Drink) {
+        viewModelScope.launch {
+            drinkDao.insertDrink(drink)
+        }
+    }
+
+    fun updateDrink(drink: Drink) {
+        viewModelScope.launch {
+            drinkDao.updateDrink(drink)
+        }
+    }
+
+    fun deleteDrink(drink: Drink) {
+        viewModelScope.launch {
+            drinkDao.deleteDrink(drink)
+        }
+    }
+
+    fun exportDrinks(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading
+            val result = exportImportManager.exportDrinksToJson(uri)
+            if (result.isSuccess) {
+                _uiState.value = SettingsUiState.Success("Drinks exported successfully")
+            } else {
+                _uiState.value = SettingsUiState.Error("Export failed: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
+    fun importDrinks(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading
+            val result = exportImportManager.importDrinksFromJson(uri)
+            if (result.isSuccess) {
+                _uiState.value = SettingsUiState.Success("Drinks imported successfully")
+            } else {
+                _uiState.value = SettingsUiState.Error("Import failed: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
 
     fun exportDatabase(uri: Uri) {
         viewModelScope.launch {
