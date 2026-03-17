@@ -126,6 +126,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
             val brew = Brew(
                 coffeeId = coffee.id,
                 sieveId = sieve.id,
+                drinkId = selectedDrink?.id,
                 temperature = temp,
                 coffeeWeight = weight,
                 targetYield = target,

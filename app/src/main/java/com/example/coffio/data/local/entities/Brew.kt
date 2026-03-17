@@ -18,6 +18,12 @@ import androidx.room.PrimaryKey
             parentColumns = ["id"],
             childColumns = ["sieveId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Drink::class,
+            parentColumns = ["id"],
+            childColumns = ["drinkId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ]
 )
@@ -25,6 +31,7 @@ data class Brew(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val coffeeId: Long,
     val sieveId: Long,
+    val drinkId: Long? = null,
     val temperature: Double,
     val coffeeWeight: Double,
     val targetYield: Double,

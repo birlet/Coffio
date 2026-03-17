@@ -9,5 +9,15 @@ data class BrewWithCoffee(
         parentColumn = "coffeeId",
         entityColumn = "id"
     )
-    val coffee: Coffee
+    val coffee: Coffee,
+    @Relation(
+        parentColumn = "sieveId",
+        entityColumn = "id"
+    )
+    val sieve: Sieve,
+    @Relation(
+        parentColumn = "drinkId",
+        entityColumn = "id"
+    )
+    val drink: Drink?
 )
