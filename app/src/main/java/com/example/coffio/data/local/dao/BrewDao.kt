@@ -28,4 +28,7 @@ interface BrewDao {
 
     @Query("DELETE FROM brews")
     suspend fun deleteAllBrews()
+
+    @Query("SELECT * FROM brews WHERE coffeeId = :coffeeId AND sieveId = :sieveId")
+    suspend fun getBrewsByCoffeeAndSieve(coffeeId: Long, sieveId: Long): List<Brew>
 }

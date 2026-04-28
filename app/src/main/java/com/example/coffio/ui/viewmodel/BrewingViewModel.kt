@@ -13,6 +13,7 @@ import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.data.local.entities.Drink
+import com.example.coffio.data.model.GrindSizeModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -45,6 +46,28 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var grindSize by mutableStateOf("")
     var brewTime by mutableStateOf("")
     var actualYield by mutableStateOf("")
+
+    var calculatedGrindSize by mutableStateOf<String?>(null)
+        private set
+    private val grindSizeModel = GrindSizeModel()
+
+    fun updateCalculatedGrindSize() {
+        val coffee = selectedCoffee ?: return run { calculatedGrindSize = null }
+        val sieve = selectedSieve ?: return run { calculatedGrindSize = null }
+        val target = targetYield.toDoubleOrNull() ?: return run { calculatedGrindSize = null }
+
+        viewModelScope.launch {
+            val brews = brewDao.getBrewsByCoffeeAndSieve(coffee.id, sieve.id)
+            if (grindSizeModel.fit(brews)) {
+                val predicted = grindSizeModel.predict(target)
+                calculatedGrindSize = predicted?.let {
+                    String.format("%.1f", it)
+                }
+            } else {
+                calculatedGrindSize = null
+            }
+        }
+    }
 
     fun initialize(drinkId: Long) {
         viewModelScope.launch {

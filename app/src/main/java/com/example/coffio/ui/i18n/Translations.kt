@@ -42,6 +42,7 @@ data class AppStrings(
     val newSieve: String,
     val addCoffee: String,
     val addSieve: String,
+    val calculatedGrindSizeLabel: String,
 
     // History Screen
     val historyTitle: String,
@@ -137,6 +138,7 @@ val englishStrings = AppStrings(
     newSieve = "New Sieve",
     addCoffee = "Add Coffee",
     addSieve = "Add Sieve",
+    calculatedGrindSizeLabel = "Calculated Grind Size",
 
     // History Screen
     historyTitle = "History",
@@ -232,6 +234,7 @@ val germanStrings = AppStrings(
     newSieve = "Neues Sieb",
     addCoffee = "Kaffee hinzufügen",
     addSieve = "Sieb hinzufügen",
+    calculatedGrindSizeLabel = "Berechneter Mahlgrad",
 
     // History Screen
     historyTitle = "Verlauf",

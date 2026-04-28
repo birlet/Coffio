@@ -73,6 +73,7 @@ fun BrewingScreen(
                     selectedOption = viewModel.selectedCoffee?.name ?: "",
                     onOptionSelected = { name ->
                         viewModel.selectedCoffee = coffees.find { it.name == name }
+                        viewModel.updateCalculatedGrindSize()
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -89,6 +90,7 @@ fun BrewingScreen(
                     selectedOption = viewModel.selectedSieve?.name ?: "",
                     onOptionSelected = { name ->
                         viewModel.selectedSieve = sieves.find { it.name == name }
+                        viewModel.updateCalculatedGrindSize()
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -121,7 +123,10 @@ fun BrewingScreen(
                 BrewInput(
                     label = strings.targetYieldLabel,
                     value = viewModel.targetYield,
-                    onValueChange = { viewModel.targetYield = it },
+                    onValueChange = {
+                        viewModel.targetYield = it
+                        viewModel.updateCalculatedGrindSize()
+                    },
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
@@ -129,6 +134,18 @@ fun BrewingScreen(
                     value = viewModel.grindSize,
                     onValueChange = { viewModel.grindSize = it },
                     modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Calculated Grind Size (read-only)
+            viewModel.calculatedGrindSize?.let { calculated ->
+                OutlinedTextField(
+                    value = calculated,
+                    onValueChange = {},
+                    label = { Text(strings.calculatedGrindSizeLabel) },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
             }
 
