@@ -83,6 +83,8 @@ data class AppStrings(
     val thisMonth: String,
     val allCoffees: String,
     val consumptionUnit: String,
+    val total: String,
+    val totalConsumptionTitle: String,
 
     // Settings Screen
     val settingsTitle: String,
@@ -186,6 +188,8 @@ val englishStrings = AppStrings(
     thisMonth = "This Month",
     allCoffees = "All Coffees",
     consumptionUnit = "g",
+    total = "Total",
+    totalConsumptionTitle = "Total Coffee Consumption (g)",
 
     // Settings Screen
     settingsTitle = "Settings",
@@ -289,6 +293,8 @@ val germanStrings = AppStrings(
     thisMonth = "Dieser Monat",
     allCoffees = "Alle Kaffees",
     consumptionUnit = "g",
+    total = "Gesamt",
+    totalConsumptionTitle = "Gesamter Kaffeeverbrauch (g)",
 
     // Settings Screen
     settingsTitle = "Einstellungen",

@@ -23,7 +23,8 @@ import java.util.Calendar
 data class ConsumptionData(
     val today: Double = 0.0,
     val thisWeek: Double = 0.0,
-    val thisMonth: Double = 0.0
+    val thisMonth: Double = 0.0,
+    val total: Double = 0.0
 )
 
 /**
@@ -111,8 +112,12 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
     private val _consumptionState = MutableStateFlow(ConsumptionData())
     val consumptionState: StateFlow<ConsumptionData> = _consumptionState
 
+    private val _totalConsumptionState = MutableStateFlow(ConsumptionData())
+    val totalConsumptionState: StateFlow<ConsumptionData> = _totalConsumptionState
+
     private fun updateConsumption() {
         _consumptionState.value = computeConsumption(_allBrews.value, selectedCoffee)
+        _totalConsumptionState.value = computeConsumption(_allBrews.value, null)
     }
 
     private fun computeConsumption(allBrews: List<Brew>, coffee: Coffee?): ConsumptionData {
@@ -145,7 +150,8 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
         return ConsumptionData(
             today = filtered.filter { it.timestamp >= startOfDay }.sumOf { it.coffeeWeight },
             thisWeek = filtered.filter { it.timestamp >= startOfWeek }.sumOf { it.coffeeWeight },
-            thisMonth = filtered.filter { it.timestamp >= startOfMonth }.sumOf { it.coffeeWeight }
+            thisMonth = filtered.filter { it.timestamp >= startOfMonth }.sumOf { it.coffeeWeight },
+            total = filtered.sumOf { it.coffeeWeight }
         )
     }
 }

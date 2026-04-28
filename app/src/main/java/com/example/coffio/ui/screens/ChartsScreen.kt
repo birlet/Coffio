@@ -42,6 +42,7 @@ fun ChartsScreen(
     val brewsBySieve by viewModel.brewsBySieve.collectAsState()
     val regressionLines by viewModel.regressionLines.collectAsState()
     val consumption by viewModel.consumptionState.collectAsState()
+    val totalConsumption by viewModel.totalConsumptionState.collectAsState()
     val strings = LocalStrings.current
 
     Scaffold(
@@ -72,6 +73,14 @@ fun ChartsScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             
+            // Total Consumption Chart (always all coffees)
+            ConsumptionChart(
+                consumption = totalConsumption,
+                title = strings.totalConsumptionTitle,
+                label = strings.allCoffees,
+                showTotal = true
+            )
+
             SelectionDropdown(
                 label = strings.selectCoffee,
                 options = coffees.map { it.name },
@@ -81,10 +90,12 @@ fun ChartsScreen(
                 }
             )
 
-            // Consumption Chart
+            // Consumption Chart (filtered by selected coffee)
             ConsumptionChart(
                 consumption = consumption,
-                label = viewModel.selectedCoffee?.name ?: strings.allCoffees
+                title = strings.consumptionTitle,
+                label = viewModel.selectedCoffee?.name ?: strings.allCoffees,
+                showTotal = true
             )
 
             if (viewModel.selectedCoffee == null) {
@@ -361,7 +372,9 @@ fun StatItem(label: String, value: String) {
 @Composable
 fun ConsumptionChart(
     consumption: ConsumptionData,
-    label: String
+    title: String,
+    label: String,
+    showTotal: Boolean = false
 ) {
     val strings = LocalStrings.current
     val barColor = MaterialTheme.colorScheme.primary
@@ -376,7 +389,7 @@ fun ConsumptionChart(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = strings.consumptionTitle,
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -388,11 +401,12 @@ fun ConsumptionChart(
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            val values = listOf(
-                strings.today to consumption.today,
-                strings.thisWeek to consumption.thisWeek,
-                strings.thisMonth to consumption.thisMonth
-            )
+            val values = buildList {
+                add(strings.today to consumption.today)
+                add(strings.thisWeek to consumption.thisWeek)
+                add(strings.thisMonth to consumption.thisMonth)
+                if (showTotal) add(strings.total to consumption.total)
+            }
             val maxValue = values.maxOfOrNull { it.second }?.coerceAtLeast(1.0) ?: 1.0
 
             Box(
