@@ -1,6 +1,10 @@
 package com.example.coffio.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -11,8 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coffio.ui.components.SelectionDropdown
@@ -112,14 +118,20 @@ fun BrewingScreen(
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
-                    label = strings.coffeeWeightLabel,
-                    value = viewModel.coffeeWeight,
-                    onValueChange = { viewModel.coffeeWeight = it },
+                    label = strings.grindSizeLabel,
+                    value = viewModel.grindSize,
+                    onValueChange = { viewModel.grindSize = it },
                     modifier = Modifier.weight(1f)
                 )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BrewInput(
+                    label = strings.coffeeWeightLabel,
+                    value = viewModel.coffeeWeight,
+                    onValueChange = { viewModel.coffeeWeight = it },
+                    modifier = Modifier.weight(1f)
+                )
                 BrewInput(
                     label = strings.targetYieldLabel,
                     value = viewModel.targetYield,
@@ -127,12 +139,6 @@ fun BrewingScreen(
                         viewModel.targetYield = it
                         viewModel.updateCalculatedGrindSize()
                     },
-                    modifier = Modifier.weight(1f)
-                )
-                BrewInput(
-                    label = strings.grindSizeLabel,
-                    value = viewModel.grindSize,
-                    onValueChange = { viewModel.grindSize = it },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -151,17 +157,12 @@ fun BrewingScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
-                    label = strings.tamperLabel,
-                    value = viewModel.tamperPressure,
-                    onValueChange = { viewModel.tamperPressure = it },
-                    modifier = Modifier.weight(1f)
-                )
-                BrewInput(
                     label = strings.milkLabel,
                     value = viewModel.milkVolume,
                     onValueChange = { viewModel.milkVolume = it },
                     modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.weight(1f))
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -182,18 +183,26 @@ fun BrewingScreen(
             // Post-Brewing
             Text(strings.result, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BrewInput(
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                WheelPicker(
                     label = strings.brewTimeLabel,
-                    value = viewModel.resultBrewTime,
-                    onValueChange = { viewModel.resultBrewTime = it },
+                    value = viewModel.resultBrewTime.toIntOrNull()
+                        ?: viewModel.desiredBrewTime.toIntOrNull() ?: 25,
+                    range = 0..120,
+                    step = 1,
+                    onValueChange = { viewModel.resultBrewTime = it.toString() },
                     modifier = Modifier.weight(1f)
                 )
-                BrewInput(
+                WheelPicker(
                     label = strings.actualYieldLabel,
-                    value = viewModel.actualYield,
-                    onValueChange = { viewModel.actualYield = it },
-                    placeholder = viewModel.targetYield,
+                    value = viewModel.actualYield.toIntOrNull()
+                        ?: viewModel.targetYield.toIntOrNull() ?: 36,
+                    range = 0..200,
+                    step = 1,
+                    onValueChange = { viewModel.actualYield = it.toString() },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -301,4 +310,108 @@ fun AddItemDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun WheelPicker(
+    label: String,
+    value: Int,
+    range: IntRange,
+    step: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val items = range.step(step).toList()
+    val initialIndex = items.indexOf(value).coerceAtLeast(0)
+    val visibleCount = 5
+    val halfVisible = visibleCount / 2
+
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+
+    // Report value changes when scrolling settles
+    val centeredIndex by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex + halfVisible -
+                if (listState.firstVisibleItemScrollOffset > 0) 0 else 0
+        }
+    }
+
+    LaunchedEffect(centeredIndex) {
+        if (!listState.isScrollInProgress) {
+            val idx = centeredIndex.coerceIn(items.indices)
+            onValueChange(items[idx])
+        }
+    }
+
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val idx = (listState.firstVisibleItemIndex + halfVisible).coerceIn(items.indices)
+            onValueChange(items[idx])
+        }
+    }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+
+        Box(
+            modifier = Modifier
+                .height((visibleCount * 40).dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            LazyColumn(
+                state = listState,
+                flingBehavior = flingBehavior,
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Padding items to allow centering
+                items(halfVisible) {
+                    Box(modifier = Modifier.height(40.dp))
+                }
+                items(items.size) { index ->
+                    val isCenter = index == listState.firstVisibleItemIndex + halfVisible
+                    Box(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .fillMaxWidth()
+                            .alpha(if (isCenter) 1f else 0.4f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = items[index].toString(),
+                            style = if (isCenter) MaterialTheme.typography.titleLarge
+                            else MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isCenter) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                // Padding items at the bottom
+                items(halfVisible) {
+                    Box(modifier = Modifier.height(40.dp))
+                }
+            }
+
+            // Selection highlight
+            Box(
+                modifier = Modifier
+                    .height(40.dp)
+                    .fillMaxWidth()
+            ) {
+                HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
+                HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
+            }
+        }
+    }
 }
