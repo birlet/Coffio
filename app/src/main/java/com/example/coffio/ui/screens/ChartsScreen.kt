@@ -242,7 +242,7 @@ fun GrindTimeChart(
             val x2 = paddingLeft + (regressionLine.endTime / maxTime) * chartWidth
             val y2 = height - paddingBottom - (regressionLine.endGrind / maxGrind) * chartHeight
             drawLine(
-                color = Color(0xFFFF9800),
+                color = Color.Green,
                 start = Offset(x1, y1),
                 end = Offset(x2, y2),
                 strokeWidth = 3.dp.toPx(),
@@ -305,7 +305,7 @@ fun Legend() {
         Spacer(modifier = Modifier.width(16.dp))
         LegendItem("1:3", Color.Red)
         Spacer(modifier = Modifier.width(16.dp))
-        LegendItem(strings.modelLine, Color(0xFFFF9800))
+        LegendItem(strings.modelLine, Color.Green)
     }
 }
 

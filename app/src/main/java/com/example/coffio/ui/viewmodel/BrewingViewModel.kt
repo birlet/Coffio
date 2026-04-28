@@ -44,7 +44,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var tamperPressure by mutableStateOf("")
     var milkVolume by mutableStateOf("")
     var grindSize by mutableStateOf("")
-    var brewTime by mutableStateOf("")
+    var desiredBrewTime by mutableStateOf("")
+    var resultBrewTime by mutableStateOf("")
     var actualYield by mutableStateOf("")
 
     var calculatedGrindSize by mutableStateOf<String?>(null)
@@ -55,11 +56,12 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
         val coffee = selectedCoffee ?: return run { calculatedGrindSize = null }
         val sieve = selectedSieve ?: return run { calculatedGrindSize = null }
         val target = targetYield.toDoubleOrNull() ?: return run { calculatedGrindSize = null }
+        val desiredTime = desiredBrewTime.toDoubleOrNull() ?: return run { calculatedGrindSize = null }
 
         viewModelScope.launch {
             val brews = brewDao.getBrewsByCoffeeAndSieve(coffee.id, sieve.id)
             if (grindSizeModel.fit(brews)) {
-                val predicted = grindSizeModel.predict(target)
+                val predicted = grindSizeModel.predict(target, desiredTime)
                 calculatedGrindSize = predicted?.let {
                     String.format("%.1f", it)
                 }
@@ -104,7 +106,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
         if (tamperPressure.isEmpty()) tamperPressure = prefs.tamperPressure.toString()
         if (milkVolume.isEmpty()) milkVolume = prefs.milkVolume.toString()
         if (grindSize.isEmpty()) grindSize = prefs.grindSize.toString()
-        if (brewTime.isEmpty()) brewTime = prefs.brewTime.toString()
+        if (desiredBrewTime.isEmpty()) desiredBrewTime = prefs.brewTime.toString()
 
         // Try to match coffee from IDs if not already set
         if (selectedCoffee == null) {
@@ -143,7 +145,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
         val pressure = tamperPressure.toDoubleOrNull() ?: 0.0
         val milk = milkVolume.toDoubleOrNull() ?: 0.0
         val grind = grindSize.toDoubleOrNull() ?: 0.0
-        val time = brewTime.toIntOrNull() ?: 0
+        val time = resultBrewTime.toIntOrNull() ?: 0
         val actual = actualYield.toDoubleOrNull() ?: target
 
         viewModelScope.launch {
@@ -173,7 +175,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                     tamperPressure = pressure,
                     milkVolume = milk,
                     grindSize = grind,
-                    brewTime = time
+                    brewTime = desiredBrewTime.toIntOrNull() ?: time
                 )
             )
             onSuccess()

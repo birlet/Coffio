@@ -3,93 +3,123 @@ package com.example.coffio.data.model
 import com.example.coffio.data.local.entities.Brew
 
 /**
- * Weighted linear regression model that predicts grind size from target yield
- * for a specific coffee + sieve combination.
+ * Weighted multiple linear regression model that predicts grind size
+ * from target yield and desired brew time for a specific coffee + sieve combination.
  *
- * Model: grindSize = slope * targetYield + intercept
+ * Model: grindSize = a * targetYield + b * brewTime + c
  *
  * Brews are sorted by timestamp (newest first) and each successive older
  * brew is weighted by [decayFactor]^index, so the newest brew has weight 1,
  * the next has weight [decayFactor], then [decayFactor]², etc.
- *
- * Requires at least 2 data points to fit. With fewer points it falls back
- * to the average grind size (slope = 0).
  */
 class GrindSizeModel(private val decayFactor: Double = 0.95) {
 
-    private var slope: Double = 0.0
-    private var intercept: Double = 0.0
+    private var a: Double = 0.0  // coefficient for x1 (targetYield)
+    private var b: Double = 0.0  // coefficient for x2 (brewTime)
+    private var c: Double = 0.0  // intercept
     private var fitted: Boolean = false
 
     /**
-     * Fit the weighted linear model from historical brews that share the same
-     * coffeeId and sieveId. Only brews with a non-zero grindSize are used.
-     * Newer brews receive higher weight via exponential decay.
-     *
-     * Uses targetYield as x, grindSize as y.
+     * Fit the weighted model from historical brews.
+     * Uses targetYield and brewTime as inputs, grindSize as output.
+     * Only brews with non-zero grindSize and brewTime are used.
      *
      * @return true if the model was fitted successfully.
      */
     fun fit(brews: List<Brew>): Boolean {
-        val data = brews.filter { it.grindSize > 0.0 }
+        val data = brews.filter { it.grindSize > 0.0 && it.brewTime > 0 }
             .sortedByDescending { it.timestamp }
         if (data.isEmpty()) {
             fitted = false
             return false
         }
 
-        val xValues = data.map { it.targetYield }
-        val yValues = data.map { it.grindSize }
-        return fitXY(xValues, yValues)
+        val x1 = data.map { it.targetYield }
+        val x2 = data.map { it.brewTime.toDouble() }
+        val y = data.map { it.grindSize }
+        return fitMultiple(x1, x2, y)
     }
 
     /**
-     * Fit a weighted linear regression on arbitrary x/y pairs.
+     * Fit a weighted multiple linear regression: y = a*x1 + b*x2 + c.
      * Values are assumed to be ordered newest-first for decay weighting.
      *
      * @return true if the model was fitted successfully.
      */
-    fun fitXY(xValues: List<Double>, yValues: List<Double>): Boolean {
-        require(xValues.size == yValues.size) { "x and y must have the same size" }
-        if (xValues.isEmpty()) {
+    fun fitMultiple(
+        x1Values: List<Double>,
+        x2Values: List<Double>,
+        yValues: List<Double>
+    ): Boolean {
+        require(x1Values.size == x2Values.size && x1Values.size == yValues.size) {
+            "All input lists must have the same size"
+        }
+        val n = x1Values.size
+        if (n == 0) {
             fitted = false
             return false
         }
 
-        val weights = xValues.indices.map { i -> Math.pow(decayFactor, i.toDouble()) }
+        val weights = x1Values.indices.map { i -> Math.pow(decayFactor, i.toDouble()) }
 
-        if (xValues.size == 1) {
-            slope = 0.0
-            intercept = yValues.first()
+        if (n == 1) {
+            a = 0.0
+            b = 0.0
+            c = yValues.first()
             fitted = true
             return true
         }
 
-        val sumW = weights.sum()
-        val sumWX = xValues.indices.sumOf { i -> weights[i] * xValues[i] }
-        val sumWY = yValues.indices.sumOf { i -> weights[i] * yValues[i] }
-        val sumWXY = xValues.indices.sumOf { i -> weights[i] * xValues[i] * yValues[i] }
-        val sumWX2 = xValues.indices.sumOf { i -> weights[i] * xValues[i] * xValues[i] }
+        // Weighted multiple linear regression using normal equations:
+        // [Sw1_1  Sw12   Sw1 ] [a]   [Sw1Y]
+        // [Sw12   Sw2_2  Sw2 ] [b] = [Sw2Y]
+        // [Sw1    Sw2    Sw  ] [c]   [SwY ]
+        val sw = weights.sum()
+        val sw1 = weights.indices.sumOf { i -> weights[i] * x1Values[i] }
+        val sw2 = weights.indices.sumOf { i -> weights[i] * x2Values[i] }
+        val swy = weights.indices.sumOf { i -> weights[i] * yValues[i] }
+        val sw11 = weights.indices.sumOf { i -> weights[i] * x1Values[i] * x1Values[i] }
+        val sw22 = weights.indices.sumOf { i -> weights[i] * x2Values[i] * x2Values[i] }
+        val sw12 = weights.indices.sumOf { i -> weights[i] * x1Values[i] * x2Values[i] }
+        val sw1y = weights.indices.sumOf { i -> weights[i] * x1Values[i] * yValues[i] }
+        val sw2y = weights.indices.sumOf { i -> weights[i] * x2Values[i] * yValues[i] }
 
-        val denominator = sumW * sumWX2 - sumWX * sumWX
-        if (denominator == 0.0) {
-            slope = 0.0
-            intercept = sumWY / sumW
-        } else {
-            slope = (sumW * sumWXY - sumWX * sumWY) / denominator
-            intercept = (sumWY - slope * sumWX) / sumW
+        // Solve 3x3 system via Cramer's rule
+        val det = sw11 * (sw22 * sw - sw2 * sw2) -
+                  sw12 * (sw12 * sw - sw2 * sw1) +
+                  sw1 * (sw12 * sw2 - sw22 * sw1)
+
+        if (Math.abs(det) < 1e-12) {
+            // Singular matrix — fall back to weighted average
+            a = 0.0
+            b = 0.0
+            c = swy / sw
+            fitted = true
+            return true
         }
+
+        a = (sw1y * (sw22 * sw - sw2 * sw2) -
+             sw12 * (sw2y * sw - sw2 * swy) +
+             sw1 * (sw2y * sw2 - sw22 * swy)) / det
+
+        b = (sw11 * (sw2y * sw - sw2 * swy) -
+             sw1y * (sw12 * sw - sw2 * sw1) +
+             sw1 * (sw12 * swy - sw2y * sw1)) / det
+
+        c = (sw11 * (sw22 * swy - sw2y * sw2) -
+             sw12 * (sw12 * swy - sw2y * sw1) +
+             sw1y * (sw12 * sw2 - sw22 * sw1)) / det
 
         fitted = true
         return true
     }
 
     /**
-     * Predict the best grind size for the given [targetYield].
+     * Predict grind size for the given [targetYield] and [brewTime].
      * Returns null when the model has not been fitted yet.
      */
-    fun predict(targetYield: Double): Double? {
+    fun predict(targetYield: Double, brewTime: Double): Double? {
         if (!fitted) return null
-        return slope * targetYield + intercept
+        return a * targetYield + b * brewTime + c
     }
 }

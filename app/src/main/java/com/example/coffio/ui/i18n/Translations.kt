@@ -43,6 +43,7 @@ data class AppStrings(
     val addCoffee: String,
     val addSieve: String,
     val calculatedGrindSizeLabel: String,
+    val desiredBrewTimeLabel: String,
 
     // History Screen
     val historyTitle: String,
@@ -148,6 +149,7 @@ val englishStrings = AppStrings(
     addCoffee = "Add Coffee",
     addSieve = "Add Sieve",
     calculatedGrindSizeLabel = "Calculated Grind Size",
+    desiredBrewTimeLabel = "Desired Time (s)",
 
     // History Screen
     historyTitle = "History",
@@ -253,6 +255,7 @@ val germanStrings = AppStrings(
     addCoffee = "Kaffee hinzufügen",
     addSieve = "Sieb hinzufügen",
     calculatedGrindSizeLabel = "Berechneter Mahlgrad",
+    desiredBrewTimeLabel = "Zielzeit (s)",
 
     // History Screen
     historyTitle = "Verlauf",

@@ -164,6 +164,19 @@ fun BrewingScreen(
                 )
             }
 
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BrewInput(
+                    label = strings.desiredBrewTimeLabel,
+                    value = viewModel.desiredBrewTime,
+                    onValueChange = {
+                        viewModel.desiredBrewTime = it
+                        viewModel.updateCalculatedGrindSize()
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Post-Brewing
@@ -172,8 +185,8 @@ fun BrewingScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
                     label = strings.brewTimeLabel,
-                    value = viewModel.brewTime,
-                    onValueChange = { viewModel.brewTime = it },
+                    value = viewModel.resultBrewTime,
+                    onValueChange = { viewModel.resultBrewTime = it },
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
