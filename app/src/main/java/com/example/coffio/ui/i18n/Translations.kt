@@ -76,6 +76,12 @@ data class AppStrings(
     val avgTime: String,
     val count: String,
     val avgRatio: String,
+    val consumptionTitle: String,
+    val today: String,
+    val thisWeek: String,
+    val thisMonth: String,
+    val allCoffees: String,
+    val consumptionUnit: String,
 
     // Settings Screen
     val settingsTitle: String,
@@ -172,6 +178,12 @@ val englishStrings = AppStrings(
     avgTime = "Ø Time",
     count = "Count",
     avgRatio = "Ø Ratio",
+    consumptionTitle = "Coffee Consumption (g)",
+    today = "Today",
+    thisWeek = "This Week",
+    thisMonth = "This Month",
+    allCoffees = "All Coffees",
+    consumptionUnit = "g",
 
     // Settings Screen
     settingsTitle = "Settings",
@@ -268,6 +280,12 @@ val germanStrings = AppStrings(
     avgTime = "Ø Zeit",
     count = "Anzahl",
     avgRatio = "Ø Ratio",
+    consumptionTitle = "Kaffeeverbrauch (g)",
+    today = "Heute",
+    thisWeek = "Diese Woche",
+    thisMonth = "Dieser Monat",
+    allCoffees = "Alle Kaffees",
+    consumptionUnit = "g",
 
     // Settings Screen
     settingsTitle = "Einstellungen",

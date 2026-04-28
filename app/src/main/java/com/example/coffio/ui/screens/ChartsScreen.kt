@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -24,6 +26,7 @@ import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.ui.components.SelectionDropdown
 import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.ChartsViewModel
+import com.example.coffio.ui.viewmodel.ConsumptionData
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +39,7 @@ fun ChartsScreen(
     val coffees by viewModel.coffees.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
     val brewsBySieve by viewModel.brewsBySieve.collectAsState()
+    val consumption by viewModel.consumptionState.collectAsState()
     val strings = LocalStrings.current
 
     Scaffold(
@@ -73,6 +77,12 @@ fun ChartsScreen(
                 onOptionSelected = { name ->
                     coffees.find { it.name == name }?.let { viewModel.onCoffeeSelected(it) }
                 }
+            )
+
+            // Consumption Chart
+            ConsumptionChart(
+                consumption = consumption,
+                label = viewModel.selectedCoffee?.name ?: strings.allCoffees
             )
 
             if (viewModel.selectedCoffee == null) {
@@ -321,5 +331,98 @@ fun StatItem(label: String, value: String) {
     Column {
         Text(text = label, style = MaterialTheme.typography.labelSmall)
         Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun ConsumptionChart(
+    consumption: ConsumptionData,
+    label: String
+) {
+    val strings = LocalStrings.current
+    val barColor = MaterialTheme.colorScheme.primary
+    val labelColor = MaterialTheme.colorScheme.onSurface.toArgb()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = strings.consumptionTitle,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val values = listOf(
+                strings.today to consumption.today,
+                strings.thisWeek to consumption.thisWeek,
+                strings.thisMonth to consumption.thisMonth
+            )
+            val maxValue = values.maxOfOrNull { it.second }?.coerceAtLeast(1.0) ?: 1.0
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val barCount = values.size
+                    val totalWidth = size.width
+                    val totalHeight = size.height
+                    val barSpacing = 24.dp.toPx()
+                    val labelAreaHeight = 40.dp.toPx()
+                    val topPadding = 20.dp.toPx()
+                    val chartHeight = totalHeight - labelAreaHeight - topPadding
+                    val barWidth = (totalWidth - (barCount + 1) * barSpacing) / barCount
+
+                    val paint = android.graphics.Paint().apply {
+                        color = labelColor
+                        textSize = 12.sp.toPx()
+                        textAlign = android.graphics.Paint.Align.CENTER
+                        isAntiAlias = true
+                    }
+
+                    values.forEachIndexed { index, (periodLabel, value) ->
+                        val x = barSpacing + index * (barWidth + barSpacing)
+                        val barHeight = ((value / maxValue) * chartHeight).toFloat()
+                        val barTop = topPadding + chartHeight - barHeight
+
+                        // Bar
+                        drawRect(
+                            color = barColor,
+                            topLeft = Offset(x, barTop),
+                            size = Size(barWidth, barHeight)
+                        )
+
+                        // Value label above bar
+                        drawContext.canvas.nativeCanvas.drawText(
+                            "%.1f ${strings.consumptionUnit}".format(value),
+                            x + barWidth / 2,
+                            barTop - 6.dp.toPx(),
+                            paint
+                        )
+
+                        // Period label below bar
+                        drawContext.canvas.nativeCanvas.drawText(
+                            periodLabel,
+                            x + barWidth / 2,
+                            totalHeight - 8.dp.toPx(),
+                            paint
+                        )
+                    }
+                }
+            }
+        }
     }
 }
