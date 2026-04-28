@@ -26,6 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.ui.components.SelectionDropdown
+import com.example.coffio.ui.i18n.AppLanguage
+import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.SettingsUiState
 import com.example.coffio.ui.viewmodel.SettingsViewModel
 
@@ -36,9 +38,11 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val strings = LocalStrings.current
     val uiState by viewModel.uiState.collectAsState()
     val drinks by viewModel.drinks.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
+    val currentLanguage by viewModel.language.collectAsState()
 
     var showAddDrinkDialog by remember { mutableStateOf(false) }
     var drinkToEdit by remember { mutableStateOf<Drink?>(null) }
@@ -84,17 +88,17 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(strings.settingsTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDrinkDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Drink")
+                Icon(Icons.Default.Add, contentDescription = strings.newDrink)
             }
         }
     ) { innerPadding ->
@@ -107,7 +111,29 @@ fun SettingsScreen(
         ) {
             item {
                 Text(
-                    "Drink Editor",
+                    strings.language,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = currentLanguage == AppLanguage.ENGLISH,
+                        onClick = { viewModel.setLanguage(AppLanguage.ENGLISH) },
+                        label = { Text(strings.languageEnglish) }
+                    )
+                    FilterChip(
+                        selected = currentLanguage == AppLanguage.GERMAN,
+                        onClick = { viewModel.setLanguage(AppLanguage.GERMAN) },
+                        label = { Text(strings.languageGerman) }
+                    )
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            item {
+                Text(
+                    strings.drinkEditor,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -116,7 +142,7 @@ fun SettingsScreen(
             if (drinks.isEmpty()) {
                 item {
                     Text(
-                        "No drinks added yet. Click + to add your first drink.",
+                        strings.noDrinksYet,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -144,7 +170,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Export JSON", style = MaterialTheme.typography.labelSmall)
+                        Text(strings.exportJson, style = MaterialTheme.typography.labelSmall)
                     }
                     Button(
                         onClick = { jsonImportLauncher.launch(arrayOf("application/json")) },
@@ -153,7 +179,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.FileUpload, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Import JSON", style = MaterialTheme.typography.labelSmall)
+                        Text(strings.importJson, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -161,7 +187,7 @@ fun SettingsScreen(
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
-                    "Database Management",
+                    strings.databaseManagement,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -176,7 +202,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Export Full DB (CSV)")
+                        Text(strings.exportCsv)
                     }
 
                     Button(
@@ -186,11 +212,11 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.FileUpload, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Import Full DB (CSV)")
+                        Text(strings.importCsv)
                     }
 
                     Text(
-                        text = "Note: CSV files are for full backups (Coffees, Sieves, Brews). JSON files are specifically for your Drink definitions and their settings.",
+                        text = strings.csvNote,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
@@ -202,8 +228,9 @@ fun SettingsScreen(
 
     if (showAddDrinkDialog) {
         DrinkDialog(
-            title = "New Drink",
+            title = strings.newDrink,
             sieves = sieves,
+            strings = strings,
             onDismiss = { showAddDrinkDialog = false },
             onConfirm = { name, sieveId, temp, weight, yield, grind, pressure, milk ->
                 viewModel.addDrink(
@@ -225,9 +252,10 @@ fun SettingsScreen(
 
     drinkToEdit?.let { drink ->
         DrinkDialog(
-            title = "Edit Drink",
+            title = strings.editDrink,
             initialDrink = drink,
             sieves = sieves,
+            strings = strings,
             onDismiss = { drinkToEdit = null },
             onConfirm = { name, sieveId, temp, weight, yield, grind, pressure, milk ->
                 viewModel.updateDrink(
@@ -271,7 +299,7 @@ fun DrinkItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(drink.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
-                    "Sieve: $sieveName | Temp: ${drink.defaultTemperature}°C",
+                    "${LocalStrings.current.sievePrefix}$sieveName | Temp: ${drink.defaultTemperature}°C",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -282,8 +310,7 @@ fun DrinkItem(
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                 }
-            }
-        }
+            }        }
     }
 }
 
@@ -291,6 +318,7 @@ fun DrinkItem(
 fun DrinkDialog(
     title: String,
     sieves: List<Sieve>,
+    strings: com.example.coffio.ui.i18n.AppStrings,
     initialDrink: Drink? = null,
     onDismiss: () -> Unit,
     onConfirm: (String, Long?, Double, Double, Double, Double, Double, Double) -> Unit
@@ -312,23 +340,23 @@ fun DrinkDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(strings.name) }, singleLine = true)
                 
                 SelectionDropdown(
-                    label = "Default Sieve",
-                    options = listOf("None") + sieves.map { it.name },
-                    selectedOption = sieves.find { it.id == selectedSieveId }?.name ?: "None",
-                    onOptionSelected = { name ->
-                        selectedSieveId = if (name == "None") null else sieves.find { it.name == name }?.id
+                    label = strings.defaultSieve,
+                    options = listOf(strings.none) + sieves.map { it.name },
+                    selectedOption = sieves.find { it.id == selectedSieveId }?.name ?: strings.none,
+                    onOptionSelected = { selectedName ->
+                        selectedSieveId = if (selectedName == strings.none) null else sieves.find { it.name == selectedName }?.id
                     }
                 )
 
-                OutlinedTextField(value = temp, onValueChange = { temp = it }, label = { Text("Temp (°C)") }, singleLine = true)
-                OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Coffee Weight (g)") }, singleLine = true)
-                OutlinedTextField(value = yield, onValueChange = { yield = it }, label = { Text("Target Yield (g)") }, singleLine = true)
-                OutlinedTextField(value = grind, onValueChange = { grind = it }, label = { Text("Grind Size") }, singleLine = true)
-                OutlinedTextField(value = pressure, onValueChange = { pressure = it }, label = { Text("Tamper Pressure (kg)") }, singleLine = true)
-                OutlinedTextField(value = milk, onValueChange = { milk = it }, label = { Text("Milk Volume (ml)") }, singleLine = true)
+                OutlinedTextField(value = temp, onValueChange = { temp = it }, label = { Text(strings.tempField) }, singleLine = true)
+                OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text(strings.coffeeWeightField) }, singleLine = true)
+                OutlinedTextField(value = yield, onValueChange = { yield = it }, label = { Text(strings.targetYieldField) }, singleLine = true)
+                OutlinedTextField(value = grind, onValueChange = { grind = it }, label = { Text(strings.grindSizeField) }, singleLine = true)
+                OutlinedTextField(value = pressure, onValueChange = { pressure = it }, label = { Text(strings.tamperPressureField) }, singleLine = true)
+                OutlinedTextField(value = milk, onValueChange = { milk = it }, label = { Text(strings.milkVolumeField) }, singleLine = true)
             }
         },
         confirmButton = {
@@ -347,12 +375,12 @@ fun DrinkDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Save")
+                Text(strings.save)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(strings.cancel)
             }
         }
     )

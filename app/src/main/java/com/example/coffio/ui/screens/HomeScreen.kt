@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.coffio.ui.i18n.LocalStrings
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,6 +33,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val drinks by viewModel.drinks.collectAsState()
+    val strings = LocalStrings.current
 
     Scaffold(
         topBar = {
@@ -64,8 +66,8 @@ fun HomeScreen(
             if (drinks.isEmpty()) {
                 item {
                     MenuCard(
-                        title = "Keine Getränke",
-                        subtitle = "In den Einstellungen hinzufügen",
+                        title = strings.noDrinks,
+                        subtitle = strings.addInSettings,
                         icon = Icons.Default.LocalCafe,
                         onClick = onNavigateToSettings,
                         modifier = Modifier.fillMaxWidth()
@@ -89,13 +91,13 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     SmallMenuCard(
-                        title = "History",
+                        title = strings.history,
                         icon = Icons.Default.History,
                         onClick = onNavigateToHistory,
                         modifier = Modifier.weight(1f)
                     )
                     SmallMenuCard(
-                        title = "Charts",
+                        title = strings.charts,
                         icon = Icons.Default.BarChart,
                         onClick = onNavigateToCharts,
                         modifier = Modifier.weight(1f)
@@ -105,7 +107,7 @@ fun HomeScreen(
 
             item {
                 SmallMenuCard(
-                    title = "Settings",
+                    title = strings.settings,
                     icon = Icons.Default.Settings,
                     onClick = onNavigateToSettings,
                     modifier = Modifier.fillMaxWidth()

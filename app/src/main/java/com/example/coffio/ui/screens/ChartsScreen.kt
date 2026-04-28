@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.ui.components.SelectionDropdown
+import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.ChartsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,16 +36,17 @@ fun ChartsScreen(
     val coffees by viewModel.coffees.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
     val brewsBySieve by viewModel.brewsBySieve.collectAsState()
+    val strings = LocalStrings.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Charts") },
+                title = { Text(strings.chartsTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = strings.back
                         )
                     }
                 },
@@ -65,7 +67,7 @@ fun ChartsScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             SelectionDropdown(
-                label = "Kaffee auswählen",
+                label = strings.selectCoffee,
                 options = coffees.map { it.name },
                 selectedOption = viewModel.selectedCoffee?.name ?: "",
                 onOptionSelected = { name ->
@@ -74,26 +76,26 @@ fun ChartsScreen(
             )
 
             if (viewModel.selectedCoffee == null) {
-                EmptyState("Wählen Sie einen Kaffee aus, um die Statistik zu sehen.")
+                EmptyState(strings.selectCoffeeHint)
             } else if (brewsBySieve.isEmpty()) {
-                EmptyState("Keine Brühvorgänge für diesen Kaffee gefunden.")
+                EmptyState(strings.noBrewsForCoffee)
             } else {
                 brewsBySieve.forEach { (sieveId, sieveBrews) ->
-                    val sieveName = sieves.find { it.id == sieveId }?.name ?: "Unbekanntes Sieb"
+                    val sieveName = sieves.find { it.id == sieveId }?.name ?: strings.unknownSieve
                     
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Sieb: $sieveName",
+                            text = "${strings.sievePrefix}$sieveName",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         
                         Text(
-                            text = "Mahlgrad vs. Brühzeit",
+                            text = strings.grindVsTime,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -105,7 +107,9 @@ fun ChartsScreen(
                                 .padding(vertical = 8.dp)
                         ) {
                             GrindTimeChart(
-                                brews = sieveBrews
+                                brews = sieveBrews,
+                                xAxisLabel = strings.brewTimeAxis,
+                                yAxisLabel = strings.grindAxis
                             )
                         }
                         
@@ -126,7 +130,9 @@ fun ChartsScreen(
 
 @Composable
 fun GrindTimeChart(
-    brews: List<Brew>
+    brews: List<Brew>,
+    xAxisLabel: String,
+    yAxisLabel: String
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     
@@ -203,12 +209,12 @@ fun GrindTimeChart(
             paint.textSize = 10.sp.toPx()
             paint.textAlign = android.graphics.Paint.Align.CENTER
             // X-Axis Title
-            drawText("Brühzeit [s]", paddingLeft + chartWidth / 2, height - 10.dp.toPx(), paint)
+            drawText(xAxisLabel, paddingLeft + chartWidth / 2, height - 10.dp.toPx(), paint)
             
             // Y-Axis Title
             save()
             rotate(-90f, 15.dp.toPx(), paddingTop + chartHeight / 2)
-            drawText("Mahlgrad", 15.dp.toPx(), paddingTop + chartHeight / 2, paint)
+            drawText(yAxisLabel, 15.dp.toPx(), paddingTop + chartHeight / 2, paint)
             restore()
         }
 
@@ -291,6 +297,7 @@ fun EmptyState(message: String) {
 
 @Composable
 fun StatSummary(brews: List<Brew>) {
+    val strings = LocalStrings.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -298,12 +305,12 @@ fun StatSummary(brews: List<Brew>) {
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Statistik", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(strings.statistics, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                StatItem("Ø Zeit", "%.0f s".format(brews.map { it.brewTime }.average()))
-                StatItem("Anzahl", "${brews.size}")
-                StatItem("Ø Ratio", "1:%.1f".format(brews.map { if (it.coffeeWeight > 0) it.actualYield / it.coffeeWeight else 0.0 }.average()))
+                StatItem(strings.avgTime, "%.0f s".format(brews.map { it.brewTime }.average()))
+                StatItem(strings.count, "${brews.size}")
+                StatItem(strings.avgRatio, "1:%.1f".format(brews.map { if (it.coffeeWeight > 0) it.actualYield / it.coffeeWeight else 0.0 }.average()))
             }
         }
     }

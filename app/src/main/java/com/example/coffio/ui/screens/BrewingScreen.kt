@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coffio.ui.components.SelectionDropdown
+import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.BrewingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +29,7 @@ fun BrewingScreen(
 ) {
     val coffees by viewModel.coffees.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
+    val strings = LocalStrings.current
 
     var showAddCoffeeDialog by remember { mutableStateOf(false) }
     var showAddSieveDialog by remember { mutableStateOf(false) }
@@ -40,12 +42,12 @@ fun BrewingScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(viewModel.selectedDrink?.name ?: "Brühmenü") },
+                title = { Text(viewModel.selectedDrink?.name ?: strings.brewMenu) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = strings.back
                         )
                     }
                 },
@@ -66,7 +68,7 @@ fun BrewingScreen(
             // Coffee Selection
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SelectionDropdown(
-                    label = "Kaffee",
+                    label = strings.coffee,
                     options = coffees.map { it.name },
                     selectedOption = viewModel.selectedCoffee?.name ?: "",
                     onOptionSelected = { name ->
@@ -75,14 +77,14 @@ fun BrewingScreen(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { showAddCoffeeDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Coffee")
+                    Icon(Icons.Default.Add, contentDescription = strings.addCoffee)
                 }
             }
 
             // Sieve Selection
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SelectionDropdown(
-                    label = "Sieb",
+                    label = strings.sieve,
                     options = sieves.map { it.name },
                     selectedOption = viewModel.selectedSieve?.name ?: "",
                     onOptionSelected = { name ->
@@ -91,24 +93,24 @@ fun BrewingScreen(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { showAddSieveDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Sieve")
+                    Icon(Icons.Default.Add, contentDescription = strings.addSieve)
                 }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Brewing Parameters
-            Text("Brühparameter", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(strings.brewingParameters, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
-                    label = "Temp (°C)",
+                    label = strings.tempLabel,
                     value = viewModel.temperature,
                     onValueChange = { viewModel.temperature = it },
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
-                    label = "Kaffee (g)",
+                    label = strings.coffeeWeightLabel,
                     value = viewModel.coffeeWeight,
                     onValueChange = { viewModel.coffeeWeight = it },
                     modifier = Modifier.weight(1f)
@@ -117,13 +119,13 @@ fun BrewingScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
-                    label = "Ziel (g)",
+                    label = strings.targetYieldLabel,
                     value = viewModel.targetYield,
                     onValueChange = { viewModel.targetYield = it },
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
-                    label = "Mahlgrad",
+                    label = strings.grindSizeLabel,
                     value = viewModel.grindSize,
                     onValueChange = { viewModel.grindSize = it },
                     modifier = Modifier.weight(1f)
@@ -132,13 +134,13 @@ fun BrewingScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
-                    label = "Tamper (kg)",
+                    label = strings.tamperLabel,
                     value = viewModel.tamperPressure,
                     onValueChange = { viewModel.tamperPressure = it },
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
-                    label = "Milch (ml)",
+                    label = strings.milkLabel,
                     value = viewModel.milkVolume,
                     onValueChange = { viewModel.milkVolume = it },
                     modifier = Modifier.weight(1f)
@@ -148,17 +150,17 @@ fun BrewingScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Post-Brewing
-            Text("Ergebnis", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(strings.result, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
-                    label = "Brühzeit (s)",
+                    label = strings.brewTimeLabel,
                     value = viewModel.brewTime,
                     onValueChange = { viewModel.brewTime = it },
                     modifier = Modifier.weight(1f)
                 )
                 BrewInput(
-                    label = "Ist (g)",
+                    label = strings.actualYieldLabel,
                     value = viewModel.actualYield,
                     onValueChange = { viewModel.actualYield = it },
                     placeholder = viewModel.targetYield,
@@ -176,14 +178,17 @@ fun BrewingScreen(
                 shape = MaterialTheme.shapes.large,
                 enabled = viewModel.selectedCoffee != null && viewModel.selectedSieve != null
             ) {
-                Text("Fertig", style = MaterialTheme.typography.titleMedium)
+                Text(strings.done, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
 
     if (showAddCoffeeDialog) {
         AddItemDialog(
-            title = "Neuer Kaffee",
+            title = strings.newCoffee,
+            confirmLabel = strings.add,
+            cancelLabel = strings.cancel,
+            nameLabel = strings.name,
             onDismiss = { showAddCoffeeDialog = false },
             onConfirm = { name ->
                 viewModel.addCoffee(name)
@@ -194,7 +199,10 @@ fun BrewingScreen(
 
     if (showAddSieveDialog) {
         AddItemDialog(
-            title = "Neues Sieb",
+            title = strings.newSieve,
+            confirmLabel = strings.add,
+            cancelLabel = strings.cancel,
+            nameLabel = strings.name,
             onDismiss = { showAddSieveDialog = false },
             onConfirm = { name ->
                 viewModel.addSieve(name)
@@ -230,6 +238,9 @@ fun BrewInput(
 @Composable
 fun AddItemDialog(
     title: String,
+    confirmLabel: String,
+    cancelLabel: String,
+    nameLabel: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
@@ -242,7 +253,7 @@ fun AddItemDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(nameLabel) },
                 singleLine = true
             )
         },
@@ -251,12 +262,12 @@ fun AddItemDialog(
                 onClick = { if (name.isNotBlank()) onConfirm(name) },
                 enabled = name.isNotBlank()
             ) {
-                Text("Hinzufügen")
+                Text(confirmLabel)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
+                Text(cancelLabel)
             }
         }
     )

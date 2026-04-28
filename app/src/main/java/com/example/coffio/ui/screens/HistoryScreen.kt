@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.BrewWithCoffee
+import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.HistoryViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,16 +34,17 @@ fun HistoryScreen(
     val brews by viewModel.historyState.collectAsState()
     var brewToEdit by remember { mutableStateOf<BrewWithCoffee?>(null) }
     var brewToDelete by remember { mutableStateOf<Brew?>(null) }
+    val strings = LocalStrings.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("History") },
+                title = { Text(strings.historyTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = strings.back
                         )
                     }
                 },
@@ -60,7 +62,7 @@ fun HistoryScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No brews yet",
+                    text = strings.noBrewsYet,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -100,8 +102,8 @@ fun HistoryScreen(
     brewToDelete?.let { brew ->
         AlertDialog(
             onDismissRequest = { brewToDelete = null },
-            title = { Text("Delete Brew") },
-            text = { Text("Are you sure you want to delete this brew entry?") },
+            title = { Text(strings.deleteBrew) },
+            text = { Text(strings.deleteBrewConfirm) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -110,12 +112,12 @@ fun HistoryScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(strings.delete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { brewToDelete = null }) {
-                    Text("Cancel")
+                    Text(strings.cancel)
                 }
             }
         )
@@ -198,10 +200,11 @@ fun BrewItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                DetailColumn("Grind", "${brew.grindSize}")
-                DetailColumn("Yield", "${brew.actualYield}g")
-                DetailColumn("Milk", "${brew.milkVolume}ml")
-                DetailColumn("Temp", "${brew.temperature}°C")
+                val s = LocalStrings.current
+                DetailColumn(s.grindDetail, "${brew.grindSize}")
+                DetailColumn(s.yieldDetail, "${brew.actualYield}g")
+                DetailColumn(s.milkDetail, "${brew.milkVolume}ml")
+                DetailColumn(s.tempDetail, "${brew.temperature}°C")
             }
         }
     }
@@ -213,6 +216,7 @@ fun EditBrewDialog(
     onDismiss: () -> Unit,
     onConfirm: (Brew) -> Unit
 ) {
+    val strings = LocalStrings.current
     val brew = brewWithCoffee.brew
     var temperature by remember { mutableStateOf(brew.temperature.toString()) }
     var grindSize by remember { mutableStateOf(brew.grindSize.toString()) }
@@ -223,7 +227,7 @@ fun EditBrewDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Brew") },
+        title = { Text(strings.editBrew) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -232,37 +236,37 @@ fun EditBrewDialog(
                 OutlinedTextField(
                     value = temperature,
                     onValueChange = { temperature = it },
-                    label = { Text("Temperature (°C)") },
+                    label = { Text(strings.temperature) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
                 OutlinedTextField(
                     value = grindSize,
                     onValueChange = { grindSize = it },
-                    label = { Text("Grind Size") },
+                    label = { Text(strings.grindSize) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
                 OutlinedTextField(
                     value = actualYield,
                     onValueChange = { actualYield = it },
-                    label = { Text("Actual Yield (g)") },
+                    label = { Text(strings.actualYield) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
                 OutlinedTextField(
                     value = brewTime,
                     onValueChange = { brewTime = it },
-                    label = { Text("Brew Time (s)") },
+                    label = { Text(strings.brewTime) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 OutlinedTextField(
                     value = coffeeWeight,
                     onValueChange = { coffeeWeight = it },
-                    label = { Text("Coffee Weight (g)") },
+                    label = { Text(strings.coffeeWeight) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
                 OutlinedTextField(
                     value = milkVolume,
                     onValueChange = { milkVolume = it },
-                    label = { Text("Milk Volume (ml)") },
+                    label = { Text(strings.milkVolume) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
             }
@@ -281,12 +285,12 @@ fun EditBrewDialog(
                     onConfirm(updatedBrew)
                 }
             ) {
-                Text("Save")
+                Text(strings.save)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(strings.cancel)
             }
         }
     )

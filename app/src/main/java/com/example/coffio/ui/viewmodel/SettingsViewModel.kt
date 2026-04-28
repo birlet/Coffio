@@ -6,8 +6,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coffio.data.ExportImportManager
 import com.example.coffio.data.local.CoffioDatabase
+import com.example.coffio.data.local.datastore.AppPreferencesManager
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
+import com.example.coffio.ui.i18n.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val drinkDao = database.drinkDao()
     private val sieveDao = database.sieveDao()
     private val exportImportManager = ExportImportManager(application)
+    private val appPreferencesManager = AppPreferencesManager(application)
+
+    val language: StateFlow<AppLanguage> = appPreferencesManager.languageFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppLanguage.ENGLISH)
 
     val drinks: StateFlow<List<Drink>> = drinkDao.getAllDrinks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -92,6 +98,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             } else {
                 _uiState.value = SettingsUiState.Error("Import failed: ${result.exceptionOrNull()?.message}")
             }
+        }
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        viewModelScope.launch {
+            appPreferencesManager.saveLanguage(language)
         }
     }
 
