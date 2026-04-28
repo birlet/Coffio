@@ -72,14 +72,6 @@ fun ChartsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Total Consumption Chart (always all coffees)
-            ConsumptionChart(
-                consumption = totalConsumption,
-                title = strings.totalConsumptionTitle,
-                label = strings.allCoffees,
-                showTotal = true
-            )
 
             SelectionDropdown(
                 label = strings.selectCoffee,
