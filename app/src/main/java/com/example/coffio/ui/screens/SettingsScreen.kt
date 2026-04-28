@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.ui.components.SelectionDropdown
@@ -42,6 +43,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val drinks by viewModel.drinks.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
+    val coffees by viewModel.coffees.collectAsState()
     val currentLanguage by viewModel.language.collectAsState()
 
     var showAddDrinkDialog by remember { mutableStateOf(false) }
@@ -230,13 +232,15 @@ fun SettingsScreen(
         DrinkDialog(
             title = strings.newDrink,
             sieves = sieves,
+            coffees = coffees,
             strings = strings,
             onDismiss = { showAddDrinkDialog = false },
-            onConfirm = { name, sieveId, temp, weight, yield, grind, pressure, milk ->
+            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk ->
                 viewModel.addDrink(
                     Drink(
                         name = name,
                         defaultSieveId = sieveId,
+                        defaultCoffeeId = coffeeId,
                         defaultTemperature = temp,
                         defaultCoffeeWeight = weight,
                         defaultTargetYield = yield,
@@ -255,13 +259,15 @@ fun SettingsScreen(
             title = strings.editDrink,
             initialDrink = drink,
             sieves = sieves,
+            coffees = coffees,
             strings = strings,
             onDismiss = { drinkToEdit = null },
-            onConfirm = { name, sieveId, temp, weight, yield, grind, pressure, milk ->
+            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk ->
                 viewModel.updateDrink(
                     drink.copy(
                         name = name,
                         defaultSieveId = sieveId,
+                        defaultCoffeeId = coffeeId,
                         defaultTemperature = temp,
                         defaultCoffeeWeight = weight,
                         defaultTargetYield = yield,
@@ -318,13 +324,15 @@ fun DrinkItem(
 fun DrinkDialog(
     title: String,
     sieves: List<Sieve>,
+    coffees: List<Coffee>,
     strings: com.example.coffio.ui.i18n.AppStrings,
     initialDrink: Drink? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, Long?, Double, Double, Double, Double, Double, Double) -> Unit
+    onConfirm: (String, Long?, Long?, Double, Double, Double, Double, Double, Double) -> Unit
 ) {
     var name by remember { mutableStateOf(initialDrink?.name ?: "") }
     var selectedSieveId by remember { mutableStateOf(initialDrink?.defaultSieveId) }
+    var selectedCoffeeId by remember { mutableStateOf(initialDrink?.defaultCoffeeId) }
     var temp by remember { mutableStateOf(initialDrink?.defaultTemperature?.toString() ?: "93.0") }
     var weight by remember { mutableStateOf(initialDrink?.defaultCoffeeWeight?.toString() ?: "18.0") }
     var yield by remember { mutableStateOf(initialDrink?.defaultTargetYield?.toString() ?: "36.0") }
@@ -351,6 +359,15 @@ fun DrinkDialog(
                     }
                 )
 
+                SelectionDropdown(
+                    label = strings.defaultCoffee,
+                    options = listOf(strings.none) + coffees.map { it.name },
+                    selectedOption = coffees.find { it.id == selectedCoffeeId }?.name ?: strings.none,
+                    onOptionSelected = { selectedName ->
+                        selectedCoffeeId = if (selectedName == strings.none) null else coffees.find { it.name == selectedName }?.id
+                    }
+                )
+
                 OutlinedTextField(value = temp, onValueChange = { temp = it }, label = { Text(strings.tempField) }, singleLine = true)
                 OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text(strings.coffeeWeightField) }, singleLine = true)
                 OutlinedTextField(value = yield, onValueChange = { yield = it }, label = { Text(strings.targetYieldField) }, singleLine = true)
@@ -365,6 +382,7 @@ fun DrinkDialog(
                     onConfirm(
                         name,
                         selectedSieveId,
+                        selectedCoffeeId,
                         temp.toDoubleOrNull() ?: 93.0,
                         weight.toDoubleOrNull() ?: 18.0,
                         yield.toDoubleOrNull() ?: 36.0,
