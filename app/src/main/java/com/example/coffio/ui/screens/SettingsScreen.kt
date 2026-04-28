@@ -235,7 +235,7 @@ fun SettingsScreen(
             coffees = coffees,
             strings = strings,
             onDismiss = { showAddDrinkDialog = false },
-            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk ->
+            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk, visible ->
                 viewModel.addDrink(
                     Drink(
                         name = name,
@@ -246,7 +246,8 @@ fun SettingsScreen(
                         defaultTargetYield = yield,
                         defaultGrindSize = grind,
                         defaultTamperPressure = pressure,
-                        defaultMilkVolume = milk
+                        defaultMilkVolume = milk,
+                        isVisible = visible
                     )
                 )
                 showAddDrinkDialog = false
@@ -262,7 +263,7 @@ fun SettingsScreen(
             coffees = coffees,
             strings = strings,
             onDismiss = { drinkToEdit = null },
-            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk ->
+            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk, visible ->
                 viewModel.updateDrink(
                     drink.copy(
                         name = name,
@@ -273,7 +274,8 @@ fun SettingsScreen(
                         defaultTargetYield = yield,
                         defaultGrindSize = grind,
                         defaultTamperPressure = pressure,
-                        defaultMilkVolume = milk
+                        defaultMilkVolume = milk,
+                        isVisible = visible
                     )
                 )
                 drinkToEdit = null
@@ -328,11 +330,12 @@ fun DrinkDialog(
     strings: com.example.coffio.ui.i18n.AppStrings,
     initialDrink: Drink? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, Long?, Long?, Double, Double, Double, Double, Double, Double) -> Unit
+    onConfirm: (String, Long?, Long?, Double, Double, Double, Double, Double, Double, Boolean) -> Unit
 ) {
     var name by remember { mutableStateOf(initialDrink?.name ?: "") }
     var selectedSieveId by remember { mutableStateOf(initialDrink?.defaultSieveId) }
     var selectedCoffeeId by remember { mutableStateOf(initialDrink?.defaultCoffeeId) }
+    var isVisible by remember { mutableStateOf(initialDrink?.isVisible ?: true) }
     var temp by remember { mutableStateOf(initialDrink?.defaultTemperature?.toString() ?: "93.0") }
     var weight by remember { mutableStateOf(initialDrink?.defaultCoffeeWeight?.toString() ?: "18.0") }
     var yield by remember { mutableStateOf(initialDrink?.defaultTargetYield?.toString() ?: "36.0") }
@@ -374,6 +377,17 @@ fun DrinkDialog(
                 OutlinedTextField(value = grind, onValueChange = { grind = it }, label = { Text(strings.grindSizeField) }, singleLine = true)
                 OutlinedTextField(value = pressure, onValueChange = { pressure = it }, label = { Text(strings.tamperPressureField) }, singleLine = true)
                 OutlinedTextField(value = milk, onValueChange = { milk = it }, label = { Text(strings.milkVolumeField) }, singleLine = true)
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = isVisible,
+                        onCheckedChange = { isVisible = it }
+                    )
+                    Text(strings.visibleInHome, style = MaterialTheme.typography.bodyMedium)
+                }
             }
         },
         confirmButton = {
@@ -388,7 +402,8 @@ fun DrinkDialog(
                         yield.toDoubleOrNull() ?: 36.0,
                         grind.toDoubleOrNull() ?: 2.0,
                         pressure.toDoubleOrNull() ?: 15.0,
-                        milk.toDoubleOrNull() ?: 0.0
+                        milk.toDoubleOrNull() ?: 0.0,
+                        isVisible
                     )
                 },
                 enabled = name.isNotBlank()

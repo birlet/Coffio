@@ -9,6 +9,9 @@ interface DrinkDao {
     @Query("SELECT * FROM drinks")
     fun getAllDrinks(): Flow<List<Drink>>
 
+    @Query("SELECT * FROM drinks WHERE isVisible = 1")
+    fun getVisibleDrinks(): Flow<List<Drink>>
+
     @Query("SELECT * FROM drinks")
     suspend fun getAllDrinksList(): List<Drink>
 

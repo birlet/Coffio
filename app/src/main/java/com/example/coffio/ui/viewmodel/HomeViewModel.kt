@@ -13,6 +13,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val database = CoffioDatabase.getDatabase(application)
     private val drinkDao = database.drinkDao()
 
-    val drinks: StateFlow<List<Drink>> = drinkDao.getAllDrinks()
+    val drinks: StateFlow<List<Drink>> = drinkDao.getVisibleDrinks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
