@@ -112,21 +112,6 @@ fun BrewingScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BrewInput(
-                    label = strings.tempLabel,
-                    value = viewModel.temperature,
-                    onValueChange = { viewModel.temperature = it },
-                    modifier = Modifier.weight(1f)
-                )
-                BrewInput(
-                    label = strings.grindSizeLabel,
-                    value = viewModel.grindSize,
-                    onValueChange = { viewModel.grindSize = it },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BrewInput(
                     label = strings.coffeeWeightLabel,
                     value = viewModel.coffeeWeight,
                     onValueChange = { viewModel.coffeeWeight = it },
@@ -143,26 +128,19 @@ fun BrewingScreen(
                 )
             }
 
-            // Calculated Grind Size (read-only)
-            viewModel.calculatedGrindSize?.let { calculated ->
-                OutlinedTextField(
-                    value = calculated,
-                    onValueChange = {},
-                    label = { Text(strings.calculatedGrindSizeLabel) },
-                    readOnly = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
-
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BrewInput(
+                    label = strings.tempLabel,
+                    value = viewModel.temperature,
+                    onValueChange = { viewModel.temperature = it },
+                    modifier = Modifier.weight(1f)
+                )
                 BrewInput(
                     label = strings.milkLabel,
                     value = viewModel.milkVolume,
                     onValueChange = { viewModel.milkVolume = it },
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.weight(1f))
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -178,10 +156,45 @@ fun BrewingScreen(
                 Spacer(modifier = Modifier.weight(1f))
             }
 
+            // Calculated Grind Size (read-only) — light green highlight
+            viewModel.calculatedGrindSize?.let { calculated ->
+                OutlinedTextField(
+                    value = calculated,
+                    onValueChange = {},
+                    label = { Text(strings.calculatedGrindSizeLabel) },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFD4EDDA),
+                        focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFD4EDDA),
+                        disabledContainerColor = androidx.compose.ui.graphics.Color(0xFFD4EDDA),
+                        unfocusedBorderColor = androidx.compose.ui.graphics.Color(0xFF4CAF50),
+                        focusedBorderColor = androidx.compose.ui.graphics.Color(0xFF4CAF50),
+                    )
+                )
+            }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Post-Brewing
             Text(strings.result, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
+            // Grind Size Slider
+            val grindValue = viewModel.grindSize.toFloatOrNull() ?: 0f
+            Column {
+                Text(
+                    text = "${strings.grindSizeLabel}: ${"%.1f".format(grindValue)}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Slider(
+                    value = grindValue,
+                    onValueChange = { viewModel.grindSize = "%.1f".format(it) },
+                    valueRange = 0f..50f,
+                    steps = ((50f - 0f) / 0.1f).toInt() - 1,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -322,32 +335,33 @@ fun WheelPicker(
     onValueChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val items = range.step(step).toList()
-    val initialIndex = items.indexOf(value).coerceAtLeast(0)
-    val visibleCount = 5
+    val items = remember(range, step) { range.step(step).toList() }
+    val initialIndex = remember(value, items) { items.indexOf(value).coerceAtLeast(0) }
+    val itemHeight = 40.dp
+    val visibleCount = 3
     val halfVisible = visibleCount / 2
 
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
-    // Report value changes when scrolling settles
-    val centeredIndex by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex + halfVisible -
-                if (listState.firstVisibleItemScrollOffset > 0) 0 else 0
-        }
-    }
-
-    LaunchedEffect(centeredIndex) {
-        if (!listState.isScrollInProgress) {
-            val idx = centeredIndex.coerceIn(items.indices)
-            onValueChange(items[idx])
-        }
+    // The centered data index is firstVisibleItemIndex (which is offset by the padding items)
+    // Since we prepend `halfVisible` spacer items, the real data index at center is:
+    // firstVisibleItemIndex + halfVisible - halfVisible = firstVisibleItemIndex
+    // But firstVisibleItemIndex includes the spacer items, so the actual data index
+    // at center = firstVisibleItemIndex (0-based in the full list including spacers)
+    // minus halfVisible spacer items = data index.
+    // With halfVisible=1 spacer at top: center data index = firstVisibleItemIndex
+    // (the spacer is index 0 in lazy list, data starts at index 1)
+    // Actually the centered *lazy list* index = firstVisibleItemIndex + halfVisible
+    // The data index = (centered lazy list index) - halfVisible (spacer count)
+    // = firstVisibleItemIndex
+    val centeredDataIndex by remember {
+        derivedStateOf { listState.firstVisibleItemIndex.coerceIn(items.indices) }
     }
 
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
-            val idx = (listState.firstVisibleItemIndex + halfVisible).coerceIn(items.indices)
+            val idx = listState.firstVisibleItemIndex.coerceIn(items.indices)
             onValueChange(items[idx])
         }
     }
@@ -365,7 +379,7 @@ fun WheelPicker(
 
         Box(
             modifier = Modifier
-                .height((visibleCount * 40).dp)
+                .height(itemHeight * visibleCount)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
@@ -375,17 +389,17 @@ fun WheelPicker(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Padding items to allow centering
+                // Top spacer so the first real item can be centered
                 items(halfVisible) {
-                    Box(modifier = Modifier.height(40.dp))
+                    Box(modifier = Modifier.height(itemHeight))
                 }
                 items(items.size) { index ->
-                    val isCenter = index == listState.firstVisibleItemIndex + halfVisible
+                    val isCenter = index == centeredDataIndex
                     Box(
                         modifier = Modifier
-                            .height(40.dp)
+                            .height(itemHeight)
                             .fillMaxWidth()
-                            .alpha(if (isCenter) 1f else 0.4f),
+                            .alpha(if (isCenter) 1f else 0.3f),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -397,16 +411,16 @@ fun WheelPicker(
                         )
                     }
                 }
-                // Padding items at the bottom
+                // Bottom spacer so the last real item can be centered
                 items(halfVisible) {
-                    Box(modifier = Modifier.height(40.dp))
+                    Box(modifier = Modifier.height(itemHeight))
                 }
             }
 
             // Selection highlight
             Box(
                 modifier = Modifier
-                    .height(40.dp)
+                    .height(itemHeight)
                     .fillMaxWidth()
             ) {
                 HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
