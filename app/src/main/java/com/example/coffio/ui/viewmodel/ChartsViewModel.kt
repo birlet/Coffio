@@ -10,6 +10,7 @@ import com.example.coffio.data.local.CoffioDatabase
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Sieve
+import com.example.coffio.data.model.GrindSizeModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,17 @@ data class ConsumptionData(
     val today: Double = 0.0,
     val thisWeek: Double = 0.0,
     val thisMonth: Double = 0.0
+)
+
+/**
+ * Two endpoints of a regression line segment for the chart.
+ * Represents grindSize = f(brewTime).
+ */
+data class RegressionLine(
+    val startTime: Float,
+    val startGrind: Float,
+    val endTime: Float,
+    val endGrind: Float
 )
 
 class ChartsViewModel(application: Application) : AndroidViewModel(application) {
@@ -53,6 +65,27 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
     // Map of sieveId to list of brews for the selected coffee
     val brewsBySieve: StateFlow<Map<Long, List<Brew>>> = combine(_brews, sieves) { brews, _ ->
         brews.groupBy { it.sieveId }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    // Regression line (grindSize vs brewTime) per sieve, computed from weighted model
+    val regressionLines: StateFlow<Map<Long, RegressionLine>> = brewsBySieve.combine(sieves) { groups, _ ->
+        groups.mapNotNull { (sieveId, sieveBrews) ->
+            val filtered = sieveBrews.filter { it.grindSize > 0.0 && it.brewTime > 0 }
+                .sortedByDescending { it.timestamp }
+            if (filtered.size < 2) return@mapNotNull null
+
+            val model = GrindSizeModel()
+            val xValues = filtered.map { it.brewTime.toDouble() }
+            val yValues = filtered.map { it.grindSize }
+            if (!model.fitXY(xValues, yValues)) return@mapNotNull null
+
+            val minTime = filtered.minOf { it.brewTime }.toFloat()
+            val maxTime = filtered.maxOf { it.brewTime }.toFloat()
+            val startGrind = model.predict(minTime.toDouble())?.toFloat() ?: return@mapNotNull null
+            val endGrind = model.predict(maxTime.toDouble())?.toFloat() ?: return@mapNotNull null
+
+            sieveId to RegressionLine(minTime, startGrind, maxTime, endGrind)
+        }.toMap()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     init {

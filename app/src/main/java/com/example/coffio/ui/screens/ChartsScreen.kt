@@ -27,6 +27,7 @@ import com.example.coffio.ui.components.SelectionDropdown
 import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.ChartsViewModel
 import com.example.coffio.ui.viewmodel.ConsumptionData
+import com.example.coffio.ui.viewmodel.RegressionLine
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,6 +40,7 @@ fun ChartsScreen(
     val coffees by viewModel.coffees.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
     val brewsBySieve by viewModel.brewsBySieve.collectAsState()
+    val regressionLines by viewModel.regressionLines.collectAsState()
     val consumption by viewModel.consumptionState.collectAsState()
     val strings = LocalStrings.current
 
@@ -118,6 +120,7 @@ fun ChartsScreen(
                         ) {
                             GrindTimeChart(
                                 brews = sieveBrews,
+                                regressionLine = regressionLines[sieveId],
                                 xAxisLabel = strings.brewTimeAxis,
                                 yAxisLabel = strings.grindAxis
                             )
@@ -141,6 +144,7 @@ fun ChartsScreen(
 @Composable
 fun GrindTimeChart(
     brews: List<Brew>,
+    regressionLine: RegressionLine? = null,
     xAxisLabel: String,
     yAxisLabel: String
 ) {
@@ -228,6 +232,23 @@ fun GrindTimeChart(
             restore()
         }
 
+        // Draw Regression Line
+        if (regressionLine != null) {
+            val x1 = paddingLeft + (regressionLine.startTime / maxTime) * chartWidth
+            val y1 = height - paddingBottom - (regressionLine.startGrind / maxGrind) * chartHeight
+            val x2 = paddingLeft + (regressionLine.endTime / maxTime) * chartWidth
+            val y2 = height - paddingBottom - (regressionLine.endGrind / maxGrind) * chartHeight
+            drawLine(
+                color = Color(0xFFFF9800),
+                start = Offset(x1, y1),
+                end = Offset(x2, y2),
+                strokeWidth = 3.dp.toPx(),
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(10.dp.toPx(), 6.dp.toPx())
+                )
+            )
+        }
+
         // Draw Points
         brews.forEach { brew ->
             val x = paddingLeft + (brew.brewTime.toFloat() / maxTime) * chartWidth
@@ -269,6 +290,7 @@ fun lerpColor(start: Color, end: Color, fraction: Float): Color {
 
 @Composable
 fun Legend() {
+    val strings = LocalStrings.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -279,6 +301,8 @@ fun Legend() {
         LegendItem("1:2", Color.Green)
         Spacer(modifier = Modifier.width(16.dp))
         LegendItem("1:3", Color.Red)
+        Spacer(modifier = Modifier.width(16.dp))
+        LegendItem(strings.modelLine, Color(0xFFFF9800))
     }
 }
 

@@ -26,6 +26,8 @@ class GrindSizeModel(private val decayFactor: Double = 0.95) {
      * coffeeId and sieveId. Only brews with a non-zero grindSize are used.
      * Newer brews receive higher weight via exponential decay.
      *
+     * Uses targetYield as x, grindSize as y.
+     *
      * @return true if the model was fitted successfully.
      */
     fun fit(brews: List<Brew>): Boolean {
@@ -36,26 +38,41 @@ class GrindSizeModel(private val decayFactor: Double = 0.95) {
             return false
         }
 
-        // Compute weights: newest = 1, next = decayFactor, next = decayFactor², ...
-        val weights = data.indices.map { i -> Math.pow(decayFactor, i.toDouble()) }
+        val xValues = data.map { it.targetYield }
+        val yValues = data.map { it.grindSize }
+        return fitXY(xValues, yValues)
+    }
 
-        if (data.size == 1) {
+    /**
+     * Fit a weighted linear regression on arbitrary x/y pairs.
+     * Values are assumed to be ordered newest-first for decay weighting.
+     *
+     * @return true if the model was fitted successfully.
+     */
+    fun fitXY(xValues: List<Double>, yValues: List<Double>): Boolean {
+        require(xValues.size == yValues.size) { "x and y must have the same size" }
+        if (xValues.isEmpty()) {
+            fitted = false
+            return false
+        }
+
+        val weights = xValues.indices.map { i -> Math.pow(decayFactor, i.toDouble()) }
+
+        if (xValues.size == 1) {
             slope = 0.0
-            intercept = data.first().grindSize
+            intercept = yValues.first()
             fitted = true
             return true
         }
 
-        // Weighted linear regression:  y = grindSize, x = targetYield, w = weight
         val sumW = weights.sum()
-        val sumWX = data.indices.sumOf { i -> weights[i] * data[i].targetYield }
-        val sumWY = data.indices.sumOf { i -> weights[i] * data[i].grindSize }
-        val sumWXY = data.indices.sumOf { i -> weights[i] * data[i].targetYield * data[i].grindSize }
-        val sumWX2 = data.indices.sumOf { i -> weights[i] * data[i].targetYield * data[i].targetYield }
+        val sumWX = xValues.indices.sumOf { i -> weights[i] * xValues[i] }
+        val sumWY = yValues.indices.sumOf { i -> weights[i] * yValues[i] }
+        val sumWXY = xValues.indices.sumOf { i -> weights[i] * xValues[i] * yValues[i] }
+        val sumWX2 = xValues.indices.sumOf { i -> weights[i] * xValues[i] * xValues[i] }
 
         val denominator = sumW * sumWX2 - sumWX * sumWX
         if (denominator == 0.0) {
-            // All target yields are identical – can't compute a slope.
             slope = 0.0
             intercept = sumWY / sumW
         } else {

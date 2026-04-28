@@ -90,6 +90,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
             loadLastPreferences()
+            updateCalculatedGrindSize()
         }
     }
 
