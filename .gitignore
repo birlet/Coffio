@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+/CoffModelAnalyzer/.venv/
+/CoffModelAnalyzer/coffio_export.csv
+
