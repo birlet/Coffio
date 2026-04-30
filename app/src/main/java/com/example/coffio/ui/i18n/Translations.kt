@@ -63,6 +63,7 @@ data class AppStrings(
     val yieldDetail: String,
     val milkDetail: String,
     val tempDetail: String,
+    val timeDetail: String,
 
     // Charts Screen
     val chartsTitle: String,
@@ -171,6 +172,7 @@ val englishStrings = AppStrings(
     yieldDetail = "Yield",
     milkDetail = "Milk",
     tempDetail = "Temp",
+    timeDetail = "Time",
 
     // Charts Screen
     chartsTitle = "Charts",
@@ -279,6 +281,7 @@ val germanStrings = AppStrings(
     yieldDetail = "Ertrag",
     milkDetail = "Milch",
     tempDetail = "Temp",
+    timeDetail = "Zeit",
 
     // Charts Screen
     chartsTitle = "Diagramme",

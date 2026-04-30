@@ -11,6 +11,10 @@ interface BrewDao {
     @Query("SELECT * FROM brews WHERE dataOnly = 0 ORDER BY timestamp DESC")
     fun getAllBrewsWithCoffee(): Flow<List<BrewWithCoffee>>
 
+    @Transaction
+    @Query("SELECT * FROM brews ORDER BY timestamp DESC")
+    fun getAllBrewsWithCoffeeIncludingDataOnly(): Flow<List<BrewWithCoffee>>
+
     @Query("SELECT * FROM brews WHERE dataOnly = 0 ORDER BY timestamp DESC")
     fun getAllBrews(): Flow<List<Brew>>
 

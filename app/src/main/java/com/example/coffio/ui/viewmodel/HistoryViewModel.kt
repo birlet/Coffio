@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 class HistoryViewModel(application: Application) : AndroidViewModel(application) {
     private val brewDao = CoffioDatabase.getDatabase(application).brewDao()
 
-    val historyState: StateFlow<List<BrewWithCoffee>> = brewDao.getAllBrewsWithCoffee()
+    val historyState: StateFlow<List<BrewWithCoffee>> = brewDao.getAllBrewsWithCoffeeIncludingDataOnly()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

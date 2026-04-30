@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.BrewWithCoffee
@@ -140,7 +141,7 @@ fun BrewItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            containerColor = if (brew.dataOnly) Color(0xFFE0E0E0) else Color(0xFFE8F5E9)
         )
     ) {
         Column(
@@ -203,6 +204,7 @@ fun BrewItem(
                 val s = LocalStrings.current
                 DetailColumn(s.grindDetail, "${brew.grindSize}")
                 DetailColumn(s.yieldDetail, "${brew.actualYield}g")
+                DetailColumn(s.timeDetail, "${brew.brewTime}s")
                 DetailColumn(s.milkDetail, "${brew.milkVolume}ml")
                 DetailColumn(s.tempDetail, "${brew.temperature}°C")
             }
