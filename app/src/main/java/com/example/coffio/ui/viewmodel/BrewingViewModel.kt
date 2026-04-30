@@ -84,6 +84,10 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                     desiredBrewTime = it.defaultDesiredTime.toString()
                     tamperPressure = it.defaultTamperPressure.toString()
                     milkVolume = it.defaultMilkVolume.toString()
+
+                    // Pre-populate WheelPicker defaults from drink
+                    resultBrewTime = it.defaultDesiredTime.toInt().toString()
+                    actualYield = it.defaultTargetYield.toInt().toString()
                     
                     // Pre-select the sieve if one is defined for the drink
                     if (it.defaultSieveId != null) {
