@@ -215,8 +215,29 @@ fun BrewingScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            var dataOnly by remember { mutableStateOf(false) }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Checkbox(
+                    checked = dataOnly,
+                    onCheckedChange = { dataOnly = it }
+                )
+                Text(
+                    text = strings.saveDataOnly,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
             Button(
-                onClick = { viewModel.saveBrew(onNavigateBack) },
+                onClick = {
+                    viewModel.saveBrew(
+                        onSuccess = { if (!dataOnly) onNavigateBack() },
+                        dataOnly = dataOnly
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -343,6 +364,12 @@ fun WheelPicker(
 
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+
+    // Report the initial resolved value so the ViewModel state is always in sync
+    LaunchedEffect(Unit) {
+        val idx = initialIndex.coerceIn(items.indices)
+        onValueChange(items[idx])
+    }
 
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {

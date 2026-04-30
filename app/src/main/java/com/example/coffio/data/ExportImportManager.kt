@@ -137,9 +137,9 @@ class ExportImportManager(private val context: Context) {
 
                     // Export Brews
                     writer.write("\nTABLE:BREWS\n")
-                    writer.write("id,coffeeId,sieveId,temperature,coffeeWeight,targetYield,actualYield,tamperPressure,milkVolume,grindSize,brewTime,timestamp\n")
+                    writer.write("id,coffeeId,sieveId,temperature,coffeeWeight,targetYield,actualYield,tamperPressure,milkVolume,grindSize,brewTime,timestamp,dataOnly\n")
                     brewDao.getAllBrewsList().forEach {
-                        writer.write("${it.id},${it.coffeeId},${it.sieveId},${it.temperature},${it.coffeeWeight},${it.targetYield},${it.actualYield},${it.tamperPressure},${it.milkVolume},${it.grindSize},${it.brewTime},${it.timestamp}\n")
+                        writer.write("${it.id},${it.coffeeId},${it.sieveId},${it.temperature},${it.coffeeWeight},${it.targetYield},${it.actualYield},${it.tamperPressure},${it.milkVolume},${it.grindSize},${it.brewTime},${it.timestamp},${if (it.dataOnly) 1 else 0}\n")
                     }
                 }
             }
@@ -195,7 +195,8 @@ class ExportImportManager(private val context: Context) {
                                             milkVolume = parts[8].toDouble(),
                                             grindSize = parts[9].toDouble(),
                                             brewTime = parts[10].toInt(),
-                                            timestamp = parts[11].toLong()
+                                            timestamp = parts[11].toLong(),
+                                            dataOnly = if (parts.size >= 13) parts[12].trim() == "1" else false
                                         ))
                                     }
                                 }

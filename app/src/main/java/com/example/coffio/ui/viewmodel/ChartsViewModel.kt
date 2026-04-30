@@ -107,7 +107,7 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
         selectedCoffee = coffee
         updateConsumption()
         viewModelScope.launch {
-            brewDao.getAllBrews().collectLatest { allBrews ->
+            brewDao.getAllBrewsIncludingDataOnly().collectLatest { allBrews ->
                 _brews.value = allBrews.filter { it.coffeeId == coffee.id }
                     .sortedBy { it.timestamp }
             }

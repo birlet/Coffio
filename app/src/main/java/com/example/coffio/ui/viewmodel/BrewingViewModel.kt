@@ -135,7 +135,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun saveBrew(onSuccess: () -> Unit) {
+    fun saveBrew(onSuccess: () -> Unit, dataOnly: Boolean = false) {
         val coffee = selectedCoffee ?: return
         val sieve = selectedSieve ?: return
         
@@ -145,7 +145,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
         val pressure = tamperPressure.toDoubleOrNull() ?: 0.0
         val milk = milkVolume.toDoubleOrNull() ?: 0.0
         val grind = grindSize.toDoubleOrNull() ?: 0.0
-        val time = resultBrewTime.toIntOrNull() ?: 0
+        val time = resultBrewTime.toIntOrNull() ?: desiredBrewTime.toIntOrNull() ?: 0
         val actual = actualYield.toDoubleOrNull() ?: target
 
         viewModelScope.launch {
@@ -160,7 +160,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                 tamperPressure = pressure,
                 milkVolume = milk,
                 grindSize = grind,
-                brewTime = time
+                brewTime = time,
+                dataOnly = dataOnly
             )
             brewDao.insertBrew(brew)
             

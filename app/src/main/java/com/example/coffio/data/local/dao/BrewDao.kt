@@ -8,11 +8,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BrewDao {
     @Transaction
-    @Query("SELECT * FROM brews ORDER BY timestamp DESC")
+    @Query("SELECT * FROM brews WHERE dataOnly = 0 ORDER BY timestamp DESC")
     fun getAllBrewsWithCoffee(): Flow<List<BrewWithCoffee>>
 
-    @Query("SELECT * FROM brews ORDER BY timestamp DESC")
+    @Query("SELECT * FROM brews WHERE dataOnly = 0 ORDER BY timestamp DESC")
     fun getAllBrews(): Flow<List<Brew>>
+
+    @Query("SELECT * FROM brews ORDER BY timestamp DESC")
+    fun getAllBrewsIncludingDataOnly(): Flow<List<Brew>>
 
     @Query("SELECT * FROM brews")
     suspend fun getAllBrewsList(): List<Brew>

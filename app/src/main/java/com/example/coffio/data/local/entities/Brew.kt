@@ -40,5 +40,6 @@ data class Brew(
     val milkVolume: Double,
     val grindSize: Double = 0.0,
     val brewTime: Int = 0, // in seconds
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val dataOnly: Boolean = false
 )
