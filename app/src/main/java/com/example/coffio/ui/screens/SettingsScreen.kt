@@ -235,7 +235,7 @@ fun SettingsScreen(
             coffees = coffees,
             strings = strings,
             onDismiss = { showAddDrinkDialog = false },
-            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk, visible ->
+            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, desiredTime, pressure, milk, visible ->
                 viewModel.addDrink(
                     Drink(
                         name = name,
@@ -245,6 +245,7 @@ fun SettingsScreen(
                         defaultCoffeeWeight = weight,
                         defaultTargetYield = yield,
                         defaultGrindSize = grind,
+                        defaultDesiredTime = desiredTime,
                         defaultTamperPressure = pressure,
                         defaultMilkVolume = milk,
                         isVisible = visible
@@ -263,7 +264,7 @@ fun SettingsScreen(
             coffees = coffees,
             strings = strings,
             onDismiss = { drinkToEdit = null },
-            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, pressure, milk, visible ->
+            onConfirm = { name, sieveId, coffeeId, temp, weight, yield, grind, desiredTime, pressure, milk, visible ->
                 viewModel.updateDrink(
                     drink.copy(
                         name = name,
@@ -273,6 +274,7 @@ fun SettingsScreen(
                         defaultCoffeeWeight = weight,
                         defaultTargetYield = yield,
                         defaultGrindSize = grind,
+                        defaultDesiredTime = desiredTime,
                         defaultTamperPressure = pressure,
                         defaultMilkVolume = milk,
                         isVisible = visible
@@ -330,7 +332,7 @@ fun DrinkDialog(
     strings: com.example.coffio.ui.i18n.AppStrings,
     initialDrink: Drink? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, Long?, Long?, Double, Double, Double, Double, Double, Double, Boolean) -> Unit
+    onConfirm: (String, Long?, Long?, Double, Double, Double, Double, Double, Double, Double, Boolean) -> Unit
 ) {
     var name by remember { mutableStateOf(initialDrink?.name ?: "") }
     var selectedSieveId by remember { mutableStateOf(initialDrink?.defaultSieveId) }
@@ -340,6 +342,7 @@ fun DrinkDialog(
     var weight by remember { mutableStateOf(initialDrink?.defaultCoffeeWeight?.toString() ?: "18.0") }
     var yield by remember { mutableStateOf(initialDrink?.defaultTargetYield?.toString() ?: "36.0") }
     var grind by remember { mutableStateOf(initialDrink?.defaultGrindSize?.toString() ?: "2.0") }
+    var desiredTime by remember { mutableStateOf(initialDrink?.defaultDesiredTime?.toString() ?: "25.0") }
     var pressure by remember { mutableStateOf(initialDrink?.defaultTamperPressure?.toString() ?: "15.0") }
     var milk by remember { mutableStateOf(initialDrink?.defaultMilkVolume?.toString() ?: "0.0") }
 
@@ -375,6 +378,7 @@ fun DrinkDialog(
                 OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text(strings.coffeeWeightField) }, singleLine = true)
                 OutlinedTextField(value = yield, onValueChange = { yield = it }, label = { Text(strings.targetYieldField) }, singleLine = true)
                 OutlinedTextField(value = grind, onValueChange = { grind = it }, label = { Text(strings.grindSizeField) }, singleLine = true)
+                OutlinedTextField(value = desiredTime, onValueChange = { desiredTime = it }, label = { Text(strings.desiredTimeField) }, singleLine = true)
                 OutlinedTextField(value = pressure, onValueChange = { pressure = it }, label = { Text(strings.tamperPressureField) }, singleLine = true)
                 OutlinedTextField(value = milk, onValueChange = { milk = it }, label = { Text(strings.milkVolumeField) }, singleLine = true)
 
@@ -401,6 +405,7 @@ fun DrinkDialog(
                         weight.toDoubleOrNull() ?: 18.0,
                         yield.toDoubleOrNull() ?: 36.0,
                         grind.toDoubleOrNull() ?: 2.0,
+                        desiredTime.toDoubleOrNull() ?: 25.0,
                         pressure.toDoubleOrNull() ?: 15.0,
                         milk.toDoubleOrNull() ?: 0.0,
                         isVisible

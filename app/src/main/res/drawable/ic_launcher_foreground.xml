@@ -4,77 +4,33 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Coffee cup body -->
+    <!-- C -->
     <path
-        android:fillColor="#4CAF50"
-        android:pathData="M34,38 L34,68 Q34,78 44,78 L64,78 Q74,78 74,68 L74,38 Z" />
+        android:fillColor="#0A260C"
+        android:pathData="M28,46 Q28,38 34,38 L38,38 L38,42 L34,42 Q32,42 32,46 L32,62 Q32,66 34,66 L38,66 L38,70 L34,70 Q28,70 28,62 Z" />
 
-    <!-- Cup rim -->
+    <!-- o -->
     <path
-        android:fillColor="#388E3C"
-        android:pathData="M31,35 L77,35 L77,41 L31,41 Z" />
+        android:fillColor="#0A260C"
+        android:pathData="M40,48 Q40,42 45,42 Q50,42 50,48 L50,62 Q50,70 45,70 Q40,70 40,62 Z M44,48 Q44,46 45,46 Q46,46 46,48 L46,62 Q46,66 45,66 Q44,66 44,62 Z" />
 
-    <!-- Cup handle -->
+    <!-- f -->
     <path
-        android:fillColor="#4CAF50"
-        android:pathData="M74,45 Q86,45 86,56 Q86,67 74,67"
-        android:strokeWidth="4"
-        android:strokeColor="#4CAF50" />
+        android:fillColor="#0A260C"
+        android:pathData="M52,44 Q52,38 56,38 L58,38 L58,42 L56.5,42 Q56,42 56,44 L56,46 L58,46 L58,50 L56,50 L56,70 L52,70 L52,50 L51,50 L51,46 L52,46 Z" />
 
-    <!-- Steam line left -->
+    <!-- f -->
     <path
-        android:fillColor="#00000000"
-        android:pathData="M44,32 Q42,27 44,22 Q46,17 44,12"
-        android:strokeWidth="2"
-        android:strokeColor="#A5D6A7"
-        android:strokeLineCap="round" />
+        android:fillColor="#0A260C"
+        android:pathData="M60,44 Q60,38 64,38 L66,38 L66,42 L64.5,42 Q64,42 64,44 L64,46 L66,46 L66,50 L64,50 L64,70 L60,70 L60,50 L59,50 L59,46 L60,46 Z" />
 
-    <!-- Steam line center -->
+    <!-- I -->
     <path
-        android:fillColor="#00000000"
-        android:pathData="M54,32 Q52,27 54,22 Q56,17 54,12"
-        android:strokeWidth="2"
-        android:strokeColor="#A5D6A7"
-        android:strokeLineCap="round" />
+        android:fillColor="#2E7D32"
+        android:pathData="M68,38 L72,38 L72,70 L68,70 Z" />
 
-    <!-- Steam line right -->
+    <!-- O -->
     <path
-        android:fillColor="#00000000"
-        android:pathData="M64,32 Q62,27 64,22 Q66,17 64,12"
-        android:strokeWidth="2"
-        android:strokeColor="#A5D6A7"
-        android:strokeLineCap="round" />
-
-    <!-- Saucer / plate -->
-    <path
-        android:fillColor="#388E3C"
-        android:pathData="M28,78 Q28,84 54,84 Q80,84 80,78 L74,78 Q74,81 54,81 Q34,81 34,78 Z" />
-
-    <!-- "CoffIO" text -->
-    <group>
-        <!-- C -->
-        <path
-            android:fillColor="#2E7D32"
-            android:pathData="M33,90 Q33,87 36,87 L37,87 L37,88.5 L36,88.5 Q34.5,88.5 34.5,90 Q34.5,91.5 36,91.5 L37,91.5 L37,93 L36,93 Q33,93 33,90 Z" />
-        <!-- o -->
-        <path
-            android:fillColor="#2E7D32"
-            android:pathData="M38,89 Q38,87.5 40,87.5 Q42,87.5 42,89 L42,91.5 Q42,93 40,93 Q38,93 38,91.5 Z M39.5,89 Q39.5,88.5 40,88.5 Q40.5,88.5 40.5,89 L40.5,91.5 Q40.5,92 40,92 Q39.5,92 39.5,91.5 Z" />
-        <!-- f -->
-        <path
-            android:fillColor="#2E7D32"
-            android:pathData="M43,88.5 Q43,87 44.5,87 L45.5,87 L45.5,88.5 L44.8,88.5 Q44.5,88.5 44.5,89 L44.5,89.5 L45.5,89.5 L45.5,90.5 L44.5,90.5 L44.5,93 L43,93 L43,90.5 L42.5,90.5 L42.5,89.5 L43,89.5 Z" />
-        <!-- f -->
-        <path
-            android:fillColor="#2E7D32"
-            android:pathData="M47,88.5 Q47,87 48.5,87 L49.5,87 L49.5,88.5 L48.8,88.5 Q48.5,88.5 48.5,89 L48.5,89.5 L49.5,89.5 L49.5,90.5 L48.5,90.5 L48.5,93 L47,93 L47,90.5 L46.5,90.5 L46.5,89.5 L47,89.5 Z" />
-        <!-- I -->
-        <path
-            android:fillColor="#2E7D32"
-            android:pathData="M51,87 L52.5,87 L52.5,93 L51,93 Z" />
-        <!-- O -->
-        <path
-            android:fillColor="#2E7D32"
-            android:pathData="M54,87 Q54,85.5 56.5,85.5 Q59,85.5 59,87 L59,91 Q59,93 56.5,93 Q54,93 54,91 Z M55.5,87.5 Q55.5,87 56.5,87 Q57.5,87 57.5,87.5 L57.5,91 Q57.5,91.5 56.5,91.5 Q55.5,91.5 55.5,91 Z" />
-    </group>
+        android:fillColor="#2E7D32"
+        android:pathData="M74,38 Q74,32 80,32 Q86,32 86,38 L86,62 Q86,70 80,70 Q74,70 74,62 Z M78,40 Q78,38 80,38 Q82,38 82,40 L82,62 Q82,66 80,66 Q78,66 78,62 Z" />
 </vector>

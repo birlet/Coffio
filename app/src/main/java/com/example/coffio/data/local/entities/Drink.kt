@@ -13,6 +13,7 @@ data class Drink(
     val defaultCoffeeWeight: Double = 18.0,
     val defaultTargetYield: Double = 36.0,
     val defaultGrindSize: Double = 2.0,
+    val defaultDesiredTime: Double = 25.0,
     val defaultTamperPressure: Double = 15.0,
     val defaultMilkVolume: Double = 0.0,
     val isVisible: Boolean = true

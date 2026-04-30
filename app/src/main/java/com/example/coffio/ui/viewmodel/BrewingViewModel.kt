@@ -81,6 +81,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                     coffeeWeight = it.defaultCoffeeWeight.toString()
                     targetYield = it.defaultTargetYield.toString()
                     grindSize = it.defaultGrindSize.toString()
+                    desiredBrewTime = it.defaultDesiredTime.toString()
                     tamperPressure = it.defaultTamperPressure.toString()
                     milkVolume = it.defaultMilkVolume.toString()
                     

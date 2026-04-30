@@ -26,6 +26,7 @@ data class DrinkExport(
     val coffeeWeight: Double,
     val targetYield: Double,
     val grindSize: Double,
+    val desiredTime: Double = 25.0,
     val tamperPressure: Double,
     val milkVolume: Double
 )
@@ -56,6 +57,7 @@ class ExportImportManager(private val context: Context) {
                     coffeeWeight = drink.defaultCoffeeWeight,
                     targetYield = drink.defaultTargetYield,
                     grindSize = drink.defaultGrindSize,
+                    desiredTime = drink.defaultDesiredTime,
                     tamperPressure = drink.defaultTamperPressure,
                     milkVolume = drink.defaultMilkVolume
                 )
@@ -104,6 +106,7 @@ class ExportImportManager(private val context: Context) {
                                 defaultCoffeeWeight = export.coffeeWeight,
                                 defaultTargetYield = export.targetYield,
                                 defaultGrindSize = export.grindSize,
+                                defaultDesiredTime = export.desiredTime,
                                 defaultTamperPressure = export.tamperPressure,
                                 defaultMilkVolume = export.milkVolume
                             )
