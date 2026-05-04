@@ -69,7 +69,7 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     // Regression line (grindSize vs brewTime) per sieve, computed from weighted model
-    // Uses 1:2 ratio (targetYield = 2 * average coffeeWeight) as the target yield input
+    // Uses 1:2 ratio (actualYield = 2 * average coffeeWeight) as the yield input
     val regressionLines: StateFlow<Map<Long, RegressionLine>> = brewsBySieve.combine(sieves) { groups, _ ->
         groups.mapNotNull { (sieveId, sieveBrews) ->
             val filtered = sieveBrews.filter { it.grindSize > 0.0 && it.brewTime > 0 }
@@ -79,16 +79,16 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
             val model = GrindSizeModel()
             if (!model.fit(filtered)) return@mapNotNull null
 
-            // Use 1:2 ratio: targetYield = 2 * weighted average coffeeWeight
+            // Use 1:2 ratio: yield = 2 * weighted average coffeeWeight
             val weights = filtered.indices.map { i -> Math.pow(0.95, i.toDouble()) }
             val sumW = weights.sum()
             val avgCoffeeWeight = filtered.indices.sumOf { i -> weights[i] * filtered[i].coffeeWeight } / sumW
-            val targetYield = avgCoffeeWeight * 2.0
+            val yieldAt1To2 = avgCoffeeWeight * 2.0
 
             val minTime = filtered.minOf { it.brewTime }.toFloat()
             val maxTime = filtered.maxOf { it.brewTime }.toFloat()
-            val startGrind = model.predict(targetYield, minTime.toDouble())?.toFloat() ?: return@mapNotNull null
-            val endGrind = model.predict(targetYield, maxTime.toDouble())?.toFloat() ?: return@mapNotNull null
+            val startGrind = model.predict(yieldAt1To2, minTime.toDouble())?.toFloat() ?: return@mapNotNull null
+            val endGrind = model.predict(yieldAt1To2, maxTime.toDouble())?.toFloat() ?: return@mapNotNull null
 
             sieveId to RegressionLine(minTime, startGrind, maxTime, endGrind)
         }.toMap()

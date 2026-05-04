@@ -4,9 +4,9 @@ import com.example.coffio.data.local.entities.Brew
 
 /**
  * Weighted multiple linear regression model that predicts grind size
- * from target yield and desired brew time for a specific coffee + sieve combination.
+ * from actual yield and desired brew time for a specific coffee + sieve combination.
  *
- * Model: grindSize = a * targetYield + b * brewTime + c
+ * Model: grindSize = a * actualYield + b * brewTime + c
  *
  * Brews are sorted by timestamp (newest first) and each successive older
  * brew is weighted by [decayFactor]^index, so the newest brew has weight 1,
@@ -25,7 +25,7 @@ class GrindSizeModel(private val decayFactor: Double = 0.95) {
 
     /**
      * Fit the weighted model from historical brews.
-     * Uses targetYield and brewTime as inputs, grindSize as output.
+     * Uses actualYield and brewTime as inputs, grindSize as output.
      * Only brews with non-zero grindSize and brewTime are used.
      *
      * @return true if the model was fitted successfully.
@@ -38,7 +38,7 @@ class GrindSizeModel(private val decayFactor: Double = 0.95) {
             return false
         }
 
-        val x1 = data.map { it.targetYield }
+        val x1 = data.map { it.actualYield }
         val x2 = data.map { it.brewTime.toDouble() }
         val y = data.map { it.grindSize }
         return fitMultiple(x1, x2, y)
@@ -122,9 +122,9 @@ class GrindSizeModel(private val decayFactor: Double = 0.95) {
      * Predict grind size for the given [targetYield] and [brewTime].
      * Returns null when the model has not been fitted yet.
      */
-    fun predict(targetYield: Double, brewTime: Double): Double? {
+    fun predict(yield: Double, brewTime: Double): Double? {
         if (!fitted) return null
-        return a * targetYield + b * brewTime + c
+        return a * yield + b * brewTime + c
     }
 
     fun getCoefficients(): Triple<Double, Double, Double>? {
@@ -138,7 +138,7 @@ class GrindSizeModel(private val decayFactor: Double = 0.95) {
  *
  * Given brews for the same coffee across different sieves, this model computes
  * a per-sieve offset such that:
- *   grindSize = a * targetYield + b * brewTime + c + sieveOffset[sieveId]
+ *   grindSize = a * actualYield + b * brewTime + c + sieveOffset[sieveId]
  *
  * The offset for a reference sieve is 0; other sieves have offsets relative to it.
  * This allows transferring a model fitted on one sieve to predict for another.
@@ -213,7 +213,7 @@ class SieveLinkedModel(private val decayFactor: Double = 0.95) {
 
             // Compute residual: grindSize - globalA*targetYield - globalB*brewTime
             val offset = filtered.indices.sumOf { i ->
-                weights[i] * (filtered[i].grindSize - globalA * filtered[i].targetYield - globalB * filtered[i].brewTime)
+                weights[i] * (filtered[i].grindSize - globalA * filtered[i].actualYield - globalB * filtered[i].brewTime)
             } / sumW
 
             sieveOffsets[sieveId] = offset
