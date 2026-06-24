@@ -116,6 +116,12 @@ data class AppStrings(
     val language: String,
     val languageEnglish: String,
     val languageGerman: String,
+    val syncSettings: String,
+    val syncServerIpLabel: String,
+    val syncServerIpHint: String,
+    val syncEnabledLabel: String,
+    val syncNow: String,
+    val backupHistoryToServer: String,
 )
 
 val englishStrings = AppStrings(
@@ -227,6 +233,12 @@ val englishStrings = AppStrings(
     language = "Language",
     languageEnglish = "English",
     languageGerman = "German",
+    syncSettings = "Sync",
+    syncServerIpLabel = "Sync Server (IP or host:port)",
+    syncServerIpHint = "Example: 192.168.1.10:8000",
+    syncEnabledLabel = "Enable Sync",
+    syncNow = "Sync Now",
+    backupHistoryToServer = "Backup History To Server DB",
 )
 
 val germanStrings = AppStrings(
@@ -338,6 +350,12 @@ val germanStrings = AppStrings(
     language = "Sprache",
     languageEnglish = "Englisch",
     languageGerman = "Deutsch",
+    syncSettings = "Synchronisierung",
+    syncServerIpLabel = "Sync-Server (IP oder host:port)",
+    syncServerIpHint = "Beispiel: 192.168.1.10:8000",
+    syncEnabledLabel = "Sync aktivieren",
+    syncNow = "Jetzt synchronisieren",
+    backupHistoryToServer = "History in Server-DB sichern",
 )
 
 val LocalStrings = compositionLocalOf { englishStrings }

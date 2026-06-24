@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,6 +46,9 @@ fun SettingsScreen(
     val sieves by viewModel.sieves.collectAsState()
     val coffees by viewModel.coffees.collectAsState()
     val currentLanguage by viewModel.language.collectAsState()
+    val syncEnabled by viewModel.syncEnabled.collectAsState()
+    val syncServer by viewModel.syncServer.collectAsState()
+    var syncServerInput by remember(syncServer) { mutableStateOf(syncServer) }
 
     var showAddDrinkDialog by remember { mutableStateOf(false) }
     var drinkToEdit by remember { mutableStateOf<Drink?>(null) }
@@ -130,6 +134,67 @@ fun SettingsScreen(
                         label = { Text(strings.languageGerman) }
                     )
                 }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            item {
+                Text(
+                    strings.syncSettings,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = syncServerInput,
+                    onValueChange = {
+                        syncServerInput = it
+                        viewModel.setSyncServer(it)
+                    },
+                    label = { Text(strings.syncServerIpLabel) },
+                    placeholder = { Text(strings.syncServerIpHint) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(strings.syncEnabledLabel, style = MaterialTheme.typography.bodyLarge)
+                    Switch(
+                        checked = syncEnabled,
+                        onCheckedChange = { viewModel.setSyncEnabled(it) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { viewModel.runSyncNow() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = syncEnabled && syncServerInput.isNotBlank() && uiState !is SettingsUiState.Loading
+                ) {
+                    Icon(Icons.Default.Sync, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(strings.syncNow)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { viewModel.backupHistoryToServer() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = syncEnabled && syncServerInput.isNotBlank() && uiState !is SettingsUiState.Loading
+                ) {
+                    Icon(Icons.Default.FileUpload, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(strings.backupHistoryToServer)
+                }
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
 

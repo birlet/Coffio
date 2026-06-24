@@ -10,6 +10,7 @@ import com.example.coffio.data.local.datastore.AppPreferencesManager
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
+import com.example.coffio.data.sync.SyncManager
 import com.example.coffio.ui.i18n.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,9 +25,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val coffeeDao = database.coffeeDao()
     private val exportImportManager = ExportImportManager(application)
     private val appPreferencesManager = AppPreferencesManager(application)
+    private val syncManager = SyncManager(application)
 
     val language: StateFlow<AppLanguage> = appPreferencesManager.languageFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppLanguage.ENGLISH)
+
+    val syncEnabled: StateFlow<Boolean> = appPreferencesManager.syncEnabledFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val syncServer: StateFlow<String> = appPreferencesManager.syncServerFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
     val drinks: StateFlow<List<Drink>> = drinkDao.getAllDrinks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -114,6 +122,55 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun resetState() {
         _uiState.value = SettingsUiState.Idle
+    }
+
+    fun setSyncEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            appPreferencesManager.saveSyncEnabled(enabled)
+        }
+    }
+
+    fun setSyncServer(server: String) {
+        viewModelScope.launch {
+            appPreferencesManager.saveSyncServer(server)
+        }
+    }
+
+    fun runSyncNow() {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading
+            val server = syncServer.value
+            if (server.isBlank()) {
+                _uiState.value = SettingsUiState.Error("Sync server is empty")
+                return@launch
+            }
+
+            val result = syncManager.sync(server)
+            if (result.isSuccess) {
+                val inserted = result.getOrNull() ?: 0
+                _uiState.value = SettingsUiState.Success("Sync completed. Added $inserted new brews")
+            } else {
+                _uiState.value = SettingsUiState.Error("Sync failed: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
+    fun backupHistoryToServer() {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading
+            val server = syncServer.value
+            if (server.isBlank()) {
+                _uiState.value = SettingsUiState.Error("Sync server is empty")
+                return@launch
+            }
+
+            val result = syncManager.sync(server)
+            if (result.isSuccess) {
+                _uiState.value = SettingsUiState.Success("History backup to server completed")
+            } else {
+                _uiState.value = SettingsUiState.Error("History backup failed: ${result.exceptionOrNull()?.message}")
+            }
+        }
     }
 }
 

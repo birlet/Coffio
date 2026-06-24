@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coffio.data.local.CoffioDatabase
+import com.example.coffio.data.local.datastore.AppPreferencesManager
 import com.example.coffio.data.local.datastore.BrewPreferences
 import com.example.coffio.data.local.datastore.BrewPreferencesManager
 import com.example.coffio.data.local.entities.Brew
@@ -14,6 +15,7 @@ import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.model.GrindSizeModel
+import com.example.coffio.data.sync.SyncManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -27,6 +29,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     private val brewDao = database.brewDao()
     private val drinkDao = database.drinkDao()
     private val prefsManager = BrewPreferencesManager(application)
+    private val appPreferencesManager = AppPreferencesManager(application)
+    private val syncManager = SyncManager(application)
 
     val coffees: StateFlow<List<Coffee>> = coffeeDao.getAllCoffees()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -216,6 +220,13 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                     brewTime = desiredBrewTime.toIntOrNull() ?: time
                 )
             )
+
+            val autoSyncEnabled = appPreferencesManager.syncEnabledFlow.first()
+            val syncServer = appPreferencesManager.syncServerFlow.first()
+            if (autoSyncEnabled && syncServer.isNotBlank()) {
+                syncManager.sync(syncServer)
+            }
+
             onSuccess()
         }
     }

@@ -15,6 +15,9 @@ interface DrinkDao {
     @Query("SELECT * FROM drinks")
     suspend fun getAllDrinksList(): List<Drink>
 
+    @Query("SELECT * FROM drinks WHERE name = :name LIMIT 1")
+    suspend fun getDrinkByName(name: String): Drink?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDrink(drink: Drink)
 

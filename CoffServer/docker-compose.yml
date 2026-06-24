@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: coffio-db
+    environment:
+      POSTGRES_DB: coffio
+      POSTGRES_USER: coffio
+      POSTGRES_PASSWORD: coffio
+    ports:
+      - "5432:5432"
+    volumes:
+      - coffio_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coffio -d coffio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./sync-api
+    container_name: coffio-sync-api
+    environment:
+      DATABASE_URL: postgresql+psycopg2://coffio:coffio@db:5432/coffio
+      UVICORN_HOST: 0.0.0.0
+      UVICORN_PORT: 8000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  coffio_db_data:
