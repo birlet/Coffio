@@ -38,4 +38,7 @@ interface BrewDao {
 
     @Query("SELECT * FROM brews WHERE coffeeId = :coffeeId AND sieveId = :sieveId")
     suspend fun getBrewsByCoffeeAndSieve(coffeeId: Long, sieveId: Long): List<Brew>
+
+    @Query("SELECT * FROM brews WHERE coffeeId = :coffeeId AND sieveId = :sieveId ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLastBrewByCoffeeAndSieve(coffeeId: Long, sieveId: Long): Brew?
 }

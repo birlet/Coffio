@@ -45,6 +45,8 @@ data class AppStrings(
     val calculatedGrindSizeLabel: String,
     val desiredBrewTimeLabel: String,
     val saveDataOnly: String,
+    val lastBrew: String,
+    val noLastBrew: String,
 
     // History Screen
     val historyTitle: String,
@@ -154,6 +156,8 @@ val englishStrings = AppStrings(
     calculatedGrindSizeLabel = "Calculated Grind Size",
     desiredBrewTimeLabel = "Desired Time (s)",
     saveDataOnly = "Save only data",
+    lastBrew = "Last brew",
+    noLastBrew = "No brew yet for this coffee and sieve",
 
     // History Screen
     historyTitle = "History",
@@ -263,6 +267,8 @@ val germanStrings = AppStrings(
     calculatedGrindSizeLabel = "Berechneter Mahlgrad",
     desiredBrewTimeLabel = "Zielzeit (s)",
     saveDataOnly = "Nur Daten speichern",
+    lastBrew = "Letzter Bezug",
+    noLastBrew = "Noch kein Bezug für diese Kaffee/Sieb-Kombination",
 
     // History Screen
     historyTitle = "Verlauf",

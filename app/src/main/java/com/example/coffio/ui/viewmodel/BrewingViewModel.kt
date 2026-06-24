@@ -37,6 +37,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var selectedCoffee by mutableStateOf<Coffee?>(null)
     var selectedSieve by mutableStateOf<Sieve?>(null)
     var selectedDrink by mutableStateOf<Drink?>(null)
+    var lastBrew by mutableStateOf<Brew?>(null)
+        private set
     
     var temperature by mutableStateOf("")
     var coffeeWeight by mutableStateOf("")
@@ -51,6 +53,35 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var calculatedGrindSize by mutableStateOf<String?>(null)
         private set
     private val grindSizeModel = GrindSizeModel()
+
+    fun onCoffeeSelected(coffee: Coffee?) {
+        selectedCoffee = coffee
+        refreshSelectionData()
+    }
+
+    fun onSieveSelected(sieve: Sieve?) {
+        selectedSieve = sieve
+        refreshSelectionData()
+    }
+
+    private fun refreshSelectionData() {
+        updateCalculatedGrindSize()
+        loadLastBrewForSelection()
+    }
+
+    private fun loadLastBrewForSelection() {
+        val coffee = selectedCoffee
+        val sieve = selectedSieve
+
+        if (coffee == null || sieve == null) {
+            lastBrew = null
+            return
+        }
+
+        viewModelScope.launch {
+            lastBrew = brewDao.getLastBrewByCoffeeAndSieve(coffee.id, sieve.id)
+        }
+    }
 
     fun updateCalculatedGrindSize() {
         val coffee = selectedCoffee ?: return run { calculatedGrindSize = null }
@@ -97,7 +128,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
             loadLastPreferences()
-            updateCalculatedGrindSize()
+            refreshSelectionData()
         }
     }
 
@@ -129,14 +160,14 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     fun addCoffee(name: String) {
         viewModelScope.launch {
             val id = coffeeDao.insertCoffee(Coffee(name = name))
-            selectedCoffee = Coffee(id = id, name = name)
+            onCoffeeSelected(Coffee(id = id, name = name))
         }
     }
 
     fun addSieve(name: String) {
         viewModelScope.launch {
             val id = sieveDao.insertSieve(Sieve(name = name))
-            selectedSieve = Sieve(id = id, name = name)
+            onSieveSelected(Sieve(id = id, name = name))
         }
     }
 
@@ -169,6 +200,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                 dataOnly = dataOnly
             )
             brewDao.insertBrew(brew)
+            lastBrew = brew
             
             // Save preferences
             prefsManager.saveBrewPreferences(

@@ -38,6 +38,7 @@ fun BrewingScreen(
     val coffees by viewModel.coffees.collectAsState()
     val sieves by viewModel.sieves.collectAsState()
     val strings = LocalStrings.current
+    val lastBrew = viewModel.lastBrew
 
     var showAddCoffeeDialog by remember { mutableStateOf(false) }
     var showAddSieveDialog by remember { mutableStateOf(false) }
@@ -80,8 +81,7 @@ fun BrewingScreen(
                     options = coffees.map { it.name },
                     selectedOption = viewModel.selectedCoffee?.name ?: "",
                     onOptionSelected = { name ->
-                        viewModel.selectedCoffee = coffees.find { it.name == name }
-                        viewModel.updateCalculatedGrindSize()
+                        viewModel.onCoffeeSelected(coffees.find { it.name == name })
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -97,8 +97,7 @@ fun BrewingScreen(
                     options = sieves.map { it.name },
                     selectedOption = viewModel.selectedSieve?.name ?: "",
                     onOptionSelected = { name ->
-                        viewModel.selectedSieve = sieves.find { it.name == name }
-                        viewModel.updateCalculatedGrindSize()
+                        viewModel.onSieveSelected(sieves.find { it.name == name })
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -175,6 +174,46 @@ fun BrewingScreen(
                     focusedBorderColor = Color(0xFF4CAF50),
                 )
             )
+
+            Text(strings.lastBrew, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
+            if (lastBrew != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        LastBrewMetric(
+                            label = strings.grindSizeLabel,
+                            value = String.format(Locale.US, "%.1f", lastBrew.grindSize),
+                            modifier = Modifier.weight(1f)
+                        )
+                        LastBrewMetric(
+                            label = strings.brewTimeLabel,
+                            value = lastBrew.brewTime.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        LastBrewMetric(
+                            label = strings.actualYieldLabel,
+                            value = String.format(Locale.US, "%.1f", lastBrew.actualYield),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = strings.noLastBrew,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -274,6 +313,31 @@ fun BrewingScreen(
                 viewModel.addSieve(name)
                 showAddSieveDialog = false
             }
+        )
+    }
+}
+
+@Composable
+private fun LastBrewMetric(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
     }
 }
