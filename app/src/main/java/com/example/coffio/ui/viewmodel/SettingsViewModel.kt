@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val database = CoffioDatabase.getDatabase(application)
+    private val brewDao = database.brewDao()
     private val drinkDao = database.drinkDao()
     private val sieveDao = database.sieveDao()
     private val coffeeDao = database.coffeeDao()
