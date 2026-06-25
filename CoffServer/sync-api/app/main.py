@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, UniqueConstraint, create_engine
+from sqlalchemy import BigInteger, Boolean, Float, ForeignKey, Integer, String, UniqueConstraint, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql+psycopg2://coffio:coffio@db:5432/coffio")
@@ -61,7 +61,7 @@ class Brew(Base):
     milk_volume: Mapped[float] = mapped_column(Float, nullable=False)
     grind_size: Mapped[float] = mapped_column(Float, nullable=False)
     brew_time: Mapped[int] = mapped_column(Integer, nullable=False)
-    timestamp: Mapped[int] = mapped_column(Integer, nullable=False)
+    timestamp: Mapped[int] = mapped_column(BigInteger, nullable=False)
     data_only: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     signature: Mapped[str] = mapped_column(String(64), nullable=False)
 
