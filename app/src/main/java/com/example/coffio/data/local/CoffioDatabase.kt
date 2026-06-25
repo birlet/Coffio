@@ -13,7 +13,7 @@ import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
 
-@Database(entities = [Coffee::class, Sieve::class, Brew::class, Drink::class], version = 8, exportSchema = false)
+@Database(entities = [Coffee::class, Sieve::class, Brew::class, Drink::class], version = 9, exportSchema = false)
 abstract class CoffioDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun sieveDao(): SieveDao

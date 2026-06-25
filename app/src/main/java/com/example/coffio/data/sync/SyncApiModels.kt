@@ -46,6 +46,7 @@ data class SyncDrinkDto(
 
 @JsonClass(generateAdapter = true)
 data class SyncBrewDto(
+    val syncKey: String? = null,
     val coffeeName: String,
     val sieveName: String,
     val drinkName: String? = null,

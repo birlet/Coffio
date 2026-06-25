@@ -68,6 +68,7 @@ class SyncManager(private val context: Context) {
                         val coffeeName = coffeeNameById[brew.coffeeId] ?: return@mapNotNull null
                         val sieveName = sieveNameById[brew.sieveId] ?: return@mapNotNull null
                         SyncBrewDto(
+                            syncKey = brew.syncKey,
                             coffeeName = coffeeName,
                             sieveName = sieveName,
                             drinkName = brew.drinkId?.let { drinkNameById[it] },
@@ -137,6 +138,7 @@ class SyncManager(private val context: Context) {
             val syncedCoffeeNameById = syncedCoffees.associateBy({ it.id }, { it.name })
             val syncedSieveNameById = syncedSieves.associateBy({ it.id }, { it.name })
             val syncedDrinkNameById = syncedDrinks.associateBy({ it.id }, { it.name })
+            val localSyncKeys = syncedBrews.map { it.syncKey }.filter { it.isNotBlank() }.toHashSet()
 
             val localSignatures = syncedBrews.map { brew ->
                 val coffeeName = syncedCoffeeNameById[brew.coffeeId].orEmpty()
@@ -163,8 +165,8 @@ class SyncManager(private val context: Context) {
 
             var inserted = 0
             response.brews.forEach { dto ->
-                val signature = brewSignature(dto)
-                if (localSignatures.contains(signature)) {
+                val syncKey = dto.syncKey?.takeIf { it.isNotBlank() } ?: brewSignature(dto)
+                if (localSyncKeys.contains(syncKey)) {
                     return@forEach
                 }
 
@@ -186,10 +188,11 @@ class SyncManager(private val context: Context) {
                         grindSize = dto.grindSize,
                         brewTime = dto.brewTime,
                         timestamp = dto.timestamp,
-                        dataOnly = dto.dataOnly
+                        dataOnly = dto.dataOnly,
+                        syncKey = syncKey
                     )
                 )
-                localSignatures.add(signature)
+                localSyncKeys.add(syncKey)
                 inserted += 1
             }
 

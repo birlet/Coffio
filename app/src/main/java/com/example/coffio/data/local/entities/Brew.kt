@@ -2,10 +2,13 @@ package com.example.coffio.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 
 @Entity(
     tableName = "brews",
+    indices = [Index(value = ["syncKey"], unique = true)],
     foreignKeys = [
         ForeignKey(
             entity = Coffee::class,
@@ -41,5 +44,6 @@ data class Brew(
     val grindSize: Double = 0.0,
     val brewTime: Int = 0, // in seconds
     val timestamp: Long = System.currentTimeMillis(),
-    val dataOnly: Boolean = false
+    val dataOnly: Boolean = false,
+    val syncKey: String = UUID.randomUUID().toString()
 )

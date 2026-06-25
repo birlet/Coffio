@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class BrewingViewModel(application: Application) : AndroidViewModel(application) {
     private val database = CoffioDatabase.getDatabase(application)
@@ -201,7 +202,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                 milkVolume = milk,
                 grindSize = grind,
                 brewTime = time,
-                dataOnly = dataOnly
+                dataOnly = dataOnly,
+                syncKey = UUID.randomUUID().toString()
             )
             brewDao.insertBrew(brew)
             lastBrew = brew

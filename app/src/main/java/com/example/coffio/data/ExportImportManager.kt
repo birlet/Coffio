@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
+import java.util.UUID
 
 @JsonClass(generateAdapter = true)
 data class DrinkExport(
@@ -140,9 +141,9 @@ class ExportImportManager(private val context: Context) {
 
                     // Export Brews
                     writer.write("\nTABLE:BREWS\n")
-                    writer.write("id,coffeeId,sieveId,temperature,coffeeWeight,targetYield,actualYield,tamperPressure,milkVolume,grindSize,brewTime,timestamp,dataOnly\n")
+                    writer.write("id,coffeeId,sieveId,temperature,coffeeWeight,targetYield,actualYield,tamperPressure,milkVolume,grindSize,brewTime,timestamp,dataOnly,syncKey\n")
                     brewDao.getAllBrewsList().forEach {
-                        writer.write("${it.id},${it.coffeeId},${it.sieveId},${it.temperature},${it.coffeeWeight},${it.targetYield},${it.actualYield},${it.tamperPressure},${it.milkVolume},${it.grindSize},${it.brewTime},${it.timestamp},${if (it.dataOnly) 1 else 0}\n")
+                        writer.write("${it.id},${it.coffeeId},${it.sieveId},${it.temperature},${it.coffeeWeight},${it.targetYield},${it.actualYield},${it.tamperPressure},${it.milkVolume},${it.grindSize},${it.brewTime},${it.timestamp},${if (it.dataOnly) 1 else 0},${escapeCsv(it.syncKey)}\n")
                     }
                 }
             }
@@ -199,7 +200,8 @@ class ExportImportManager(private val context: Context) {
                                             grindSize = parts[9].toDouble(),
                                             brewTime = parts[10].toInt(),
                                             timestamp = parts[11].toLong(),
-                                            dataOnly = if (parts.size >= 13) parts[12].trim() == "1" else false
+                                            dataOnly = if (parts.size >= 13) parts[12].trim() == "1" else false,
+                                            syncKey = if (parts.size >= 14) unescapeCsv(parts[13]) else UUID.randomUUID().toString()
                                         ))
                                     }
                                 }

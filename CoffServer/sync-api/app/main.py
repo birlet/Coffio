@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from sqlalchemy import BigInteger, Boolean, Float, ForeignKey, Integer, String, UniqueConstraint, create_engine
+from sqlalchemy import BigInteger, Boolean, Float, ForeignKey, Integer, String, UniqueConstraint, create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql+psycopg2://coffio:coffio@db:5432/coffio")
@@ -50,6 +50,7 @@ class Brew(Base):
     __table_args__ = (UniqueConstraint("signature", name="uq_brews_signature"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    sync_key: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     coffee_id: Mapped[int] = mapped_column(ForeignKey("coffees.id"), nullable=False)
     sieve_id: Mapped[int] = mapped_column(ForeignKey("sieves.id"), nullable=False)
     drink_id: Mapped[Optional[int]] = mapped_column(ForeignKey("drinks.id"), nullable=True)
@@ -93,6 +94,7 @@ class DrinkDto(BaseModel):
 
 
 class BrewDto(BaseModel):
+    syncKey: Optional[str] = None
     coffeeName: str
     sieveName: str
     drinkName: Optional[str] = None
@@ -124,6 +126,21 @@ class SyncResponse(BaseModel):
 
 
 engine = create_engine(DATABASE_URL, future=True)
+
+
+def migrate_schema() -> None:
+    with engine.begin() as connection:
+        inspector = inspect(connection)
+        if "brews" in inspector.get_table_names():
+            column_names = {column["name"] for column in inspector.get_columns("brews")}
+            if "sync_key" not in column_names:
+                connection.execute(text("ALTER TABLE brews ADD COLUMN sync_key VARCHAR(64)"))
+                connection.execute(text("UPDATE brews SET sync_key = signature || '-' || id::text WHERE sync_key IS NULL"))
+                connection.execute(text("ALTER TABLE brews ALTER COLUMN sync_key SET NOT NULL"))
+                connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_brews_sync_key ON brews(sync_key)"))
+
+
+migrate_schema()
 Base.metadata.create_all(engine)
 
 app = FastAPI(title="Coffio Sync API", version="1.0.0")
@@ -148,6 +165,10 @@ def brew_signature(dto: BrewDto) -> str:
         ]
     )
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def brew_sync_key(dto: BrewDto) -> str:
+    return dto.syncKey or brew_signature(dto)
 
 
 def get_or_create_coffee(session: Session, name: str) -> Coffee:
@@ -240,12 +261,14 @@ def sync(request: SyncRequest) -> SyncResponse:
 
             drink_id = drink_by_name.get(brew_dto.drinkName) if brew_dto.drinkName else None
             signature = brew_signature(brew_dto)
-            exists = session.query(Brew.id).filter(Brew.signature == signature).first()
+            sync_key = brew_sync_key(brew_dto)
+            exists = session.query(Brew.id).filter((Brew.sync_key == sync_key) | (Brew.signature == signature)).first()
             if exists:
                 continue
 
             session.add(
                 Brew(
+                    sync_key=sync_key,
                     coffee_id=coffee_id,
                     sieve_id=sieve_id,
                     drink_id=drink_id,
@@ -295,6 +318,7 @@ def sync(request: SyncRequest) -> SyncResponse:
             ],
             brews=[
                 BrewDto(
+                    syncKey=b.sync_key,
                     coffeeName=coffee_name_by_id[b.coffee_id],
                     sieveName=sieve_name_by_id[b.sieve_id],
                     drinkName=drink_name_by_id.get(b.drink_id),

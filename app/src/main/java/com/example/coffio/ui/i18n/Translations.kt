@@ -122,6 +122,10 @@ data class AppStrings(
     val syncEnabledLabel: String,
     val syncNow: String,
     val backupHistoryToServer: String,
+    val resetDb: String,
+    val resetDbTitle: String,
+    val resetDbWarning: String,
+    val confirmResetDb: String,
 )
 
 val englishStrings = AppStrings(
@@ -239,6 +243,10 @@ val englishStrings = AppStrings(
     syncEnabledLabel = "Enable Sync",
     syncNow = "Sync Now",
     backupHistoryToServer = "Backup History To Server DB",
+    resetDb = "Reset DB",
+    resetDbTitle = "Reset database?",
+    resetDbWarning = "This will delete all local coffees, sieves, drinks, and brews. This cannot be undone.",
+    confirmResetDb = "Reset DB",
 )
 
 val germanStrings = AppStrings(
@@ -356,6 +364,10 @@ val germanStrings = AppStrings(
     syncEnabledLabel = "Sync aktivieren",
     syncNow = "Jetzt synchronisieren",
     backupHistoryToServer = "History in Server-DB sichern",
+    resetDb = "DB zurücksetzen",
+    resetDbTitle = "Datenbank zurücksetzen?",
+    resetDbWarning = "Dies löscht alle lokalen Kaffees, Siebe, Getränke und Brühvorgänge. Nicht rückgängig zu machen.",
+    confirmResetDb = "DB zurücksetzen",
 )
 
 val LocalStrings = compositionLocalOf { englishStrings }

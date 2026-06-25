@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.example.coffio.data.ExportImportManager
 import com.example.coffio.data.local.CoffioDatabase
 import com.example.coffio.data.local.datastore.AppPreferencesManager
@@ -124,6 +125,23 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = SettingsUiState.Idle
     }
 
+    fun resetDatabase() {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading
+            try {
+                database.withTransaction {
+                    brewDao.deleteAllBrews()
+                    drinkDao.deleteAllDrinks()
+                    coffeeDao.deleteAllCoffees()
+                    sieveDao.deleteAllSieves()
+                }
+                _uiState.value = SettingsUiState.Success("Database reset completed")
+            } catch (exception: Exception) {
+                _uiState.value = SettingsUiState.Error("Reset failed: ${exception.message}")
+            }
+        }
+    }
+
     fun setSyncEnabled(enabled: Boolean) {
         viewModelScope.launch {
             appPreferencesManager.saveSyncEnabled(enabled)
@@ -151,24 +169,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _uiState.value = SettingsUiState.Success("Sync completed. Added $inserted new brews")
             } else {
                 _uiState.value = SettingsUiState.Error("Sync failed: ${result.exceptionOrNull()?.message}")
-            }
-        }
-    }
-
-    fun backupHistoryToServer() {
-        viewModelScope.launch {
-            _uiState.value = SettingsUiState.Loading
-            val server = syncServer.value
-            if (server.isBlank()) {
-                _uiState.value = SettingsUiState.Error("Sync server is empty")
-                return@launch
-            }
-
-            val result = syncManager.sync(server)
-            if (result.isSuccess) {
-                _uiState.value = SettingsUiState.Success("History backup to server completed")
-            } else {
-                _uiState.value = SettingsUiState.Error("History backup failed: ${result.exceptionOrNull()?.message}")
             }
         }
     }

@@ -52,6 +52,7 @@ fun SettingsScreen(
 
     var showAddDrinkDialog by remember { mutableStateOf(false) }
     var drinkToEdit by remember { mutableStateOf<Drink?>(null) }
+    var showResetDbDialog by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
@@ -183,18 +184,6 @@ fun SettingsScreen(
                     Text(strings.syncNow)
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedButton(
-                    onClick = { viewModel.backupHistoryToServer() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = syncEnabled && syncServerInput.isNotBlank() && uiState !is SettingsUiState.Loading
-                ) {
-                    Icon(Icons.Default.FileUpload, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(strings.backupHistoryToServer)
-                }
-
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
@@ -282,6 +271,17 @@ fun SettingsScreen(
                         Text(strings.importCsv)
                     }
 
+                    OutlinedButton(
+                        onClick = { showResetDbDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = uiState !is SettingsUiState.Loading,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(strings.resetDb)
+                    }
+
                     Text(
                         text = strings.csvNote,
                         style = MaterialTheme.typography.bodySmall,
@@ -291,6 +291,29 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showResetDbDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDbDialog = false },
+            title = { Text(strings.resetDbTitle) },
+            text = { Text(strings.resetDbWarning) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.resetDatabase()
+                        showResetDbDialog = false
+                    }
+                ) {
+                    Text(strings.confirmResetDb, color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDbDialog = false }) {
+                    Text(strings.cancel)
+                }
+            }
+        )
     }
 
     if (showAddDrinkDialog) {
