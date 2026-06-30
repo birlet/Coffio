@@ -16,5 +16,6 @@ data class Drink(
     val defaultDesiredTime: Double = 25.0,
     val defaultTamperPressure: Double = 15.0,
     val defaultMilkVolume: Double = 0.0,
-    val isVisible: Boolean = true
+    val isVisible: Boolean = true,
+    val lastModified: Long = System.currentTimeMillis()
 )

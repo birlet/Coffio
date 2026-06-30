@@ -1,6 +1,8 @@
 package com.example.coffio.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,12 +13,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -108,74 +111,106 @@ fun BrewingScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Brewing Parameters
-            Text(strings.brewingParameters, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BrewInput(
-                    label = strings.coffeeWeightLabel,
-                    value = viewModel.coffeeWeight,
-                    onValueChange = { viewModel.coffeeWeight = it },
-                    modifier = Modifier.weight(1f)
-                )
-                BrewInput(
-                    label = strings.targetYieldLabel,
-                    value = viewModel.targetYield,
-                    onValueChange = {
-                        viewModel.targetYield = it
-                        viewModel.updateCalculatedGrindSize()
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BrewInput(
-                    label = strings.tempLabel,
-                    value = viewModel.temperature,
-                    onValueChange = { viewModel.temperature = it },
-                    modifier = Modifier.weight(1f)
-                )
-                BrewInput(
-                    label = strings.milkLabel,
-                    value = viewModel.milkVolume,
-                    onValueChange = { viewModel.milkVolume = it },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BrewInput(
-                    label = strings.desiredBrewTimeLabel,
-                    value = viewModel.desiredBrewTime,
-                    onValueChange = {
-                        viewModel.desiredBrewTime = it
-                        viewModel.updateCalculatedGrindSize()
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+            // Brewing Parameters — collapsible
+            var brewParamsExpanded by remember { mutableStateOf(true) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { brewParamsExpanded = !brewParamsExpanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(strings.brewingParameters, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = if (brewParamsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null
+                )
             }
 
-            // Calculated Grind Size (read-only) — light green highlight
-            OutlinedTextField(
-                value = viewModel.calculatedGrindSize ?: "",
-                onValueChange = {},
-                label = { Text(strings.calculatedGrindSizeLabel) },
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text("---") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFD4EDDA),
-                    focusedContainerColor = Color(0xFFD4EDDA),
-                    disabledContainerColor = Color(0xFFD4EDDA),
-                    unfocusedBorderColor = Color(0xFF4CAF50),
-                    focusedBorderColor = Color(0xFF4CAF50),
-                )
-            )
+            AnimatedVisibility(visible = brewParamsExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        BrewInput(
+                            label = strings.coffeeWeightLabel,
+                            value = viewModel.coffeeWeight,
+                            onValueChange = { viewModel.coffeeWeight = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        BrewInput(
+                            label = strings.targetYieldLabel,
+                            value = viewModel.targetYield,
+                            onValueChange = {
+                                viewModel.targetYield = it
+                                viewModel.updateCalculatedGrindSize()
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
 
-            Text(strings.lastBrew, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        BrewInput(
+                            label = strings.tempLabel,
+                            value = viewModel.temperature,
+                            onValueChange = { viewModel.temperature = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        BrewInput(
+                            label = strings.milkLabel,
+                            value = viewModel.milkVolume,
+                            onValueChange = { viewModel.milkVolume = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        BrewInput(
+                            label = strings.desiredBrewTimeLabel,
+                            value = viewModel.desiredBrewTime,
+                            onValueChange = {
+                                viewModel.desiredBrewTime = it
+                                viewModel.updateCalculatedGrindSize()
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // Row: "Letzter Bezug" title + Calculated Grind Size grey box
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    strings.lastBrew,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = MaterialTheme.shapes.small,
+                    tonalElevation = 1.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = strings.calculatedGrindSizeLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = viewModel.calculatedGrindSize ?: "---",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
 
             if (lastBrew != null) {
                 Card(
@@ -227,7 +262,8 @@ fun BrewingScreen(
                 val grindOptions = remember { (0..500).map { String.format(Locale.US, "%.1f", it / 10.0) } }
                 WheelPicker(
                     label = strings.grindSizeLabel,
-                    value = viewModel.grindSize.ifEmpty { "0" },
+                    value = viewModel.calculatedGrindSize
+                        ?: viewModel.grindSize.ifEmpty { "0" },
                     items = grindOptions,
                     onValueChange = { viewModel.grindSize = it },
                     modifier = Modifier.weight(1f)

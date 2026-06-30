@@ -173,6 +173,24 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+
+    fun clearServerDb() {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading
+            val server = syncServer.value
+            if (server.isBlank()) {
+                _uiState.value = SettingsUiState.Error("Sync server is empty")
+                return@launch
+            }
+
+            val result = syncManager.clearServerDb(server)
+            if (result.isSuccess) {
+                _uiState.value = SettingsUiState.Success("Server database cleared")
+            } else {
+                _uiState.value = SettingsUiState.Error("Clear failed: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
 }
 
 sealed class SettingsUiState {

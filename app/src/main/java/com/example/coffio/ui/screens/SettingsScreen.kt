@@ -53,6 +53,7 @@ fun SettingsScreen(
     var showAddDrinkDialog by remember { mutableStateOf(false) }
     var drinkToEdit by remember { mutableStateOf<Drink?>(null) }
     var showResetDbDialog by remember { mutableStateOf(false) }
+    var showClearServerDbDialog by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
@@ -184,6 +185,19 @@ fun SettingsScreen(
                     Text(strings.syncNow)
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { showClearServerDbDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = syncEnabled && syncServerInput.isNotBlank() && uiState !is SettingsUiState.Loading,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(strings.clearServerDb)
+                }
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
@@ -310,6 +324,29 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showResetDbDialog = false }) {
+                    Text(strings.cancel)
+                }
+            }
+        )
+    }
+
+    if (showClearServerDbDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearServerDbDialog = false },
+            title = { Text(strings.clearServerDbTitle) },
+            text = { Text(strings.clearServerDbWarning) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearServerDb()
+                        showClearServerDbDialog = false
+                    }
+                ) {
+                    Text(strings.confirmClearServerDb, color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearServerDbDialog = false }) {
                     Text(strings.cancel)
                 }
             }

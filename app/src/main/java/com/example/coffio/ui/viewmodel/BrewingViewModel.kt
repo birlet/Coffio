@@ -61,12 +61,27 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
 
     fun onCoffeeSelected(coffee: Coffee?) {
         selectedCoffee = coffee
+        persistDrinkSelection()
         refreshSelectionData()
     }
 
     fun onSieveSelected(sieve: Sieve?) {
         selectedSieve = sieve
+        persistDrinkSelection()
         refreshSelectionData()
+    }
+
+    private fun persistDrinkSelection() {
+        val drink = selectedDrink ?: return
+        viewModelScope.launch {
+            val updated = drink.copy(
+                defaultCoffeeId = selectedCoffee?.id ?: drink.defaultCoffeeId,
+                defaultSieveId = selectedSieve?.id ?: drink.defaultSieveId,
+                lastModified = System.currentTimeMillis()
+            )
+            drinkDao.updateDrink(updated)
+            selectedDrink = updated
+        }
     }
 
     private fun refreshSelectionData() {
@@ -112,28 +127,48 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
             if (drinkId != -1L) {
                 val drink = drinkDao.getDrinkById(drinkId)
                 selectedDrink = drink
-                drink?.let {
-                    temperature = it.defaultTemperature.toString()
-                    coffeeWeight = it.defaultCoffeeWeight.toString()
-                    targetYield = it.defaultTargetYield.toString()
-                    grindSize = it.defaultGrindSize.toString()
-                    desiredBrewTime = it.defaultDesiredTime.toString()
-                    tamperPressure = it.defaultTamperPressure.toString()
-                    milkVolume = it.defaultMilkVolume.toString()
-
-                    // Pre-populate WheelPicker defaults from drink
-                    resultBrewTime = it.defaultDesiredTime.toInt().toString()
-                    actualYield = it.defaultTargetYield.toInt().toString()
-                    
-                    // Pre-select the sieve if one is defined for the drink
-                    if (it.defaultSieveId != null) {
-                        val sieveList = sieves.first { list -> list.isNotEmpty() }
-                        selectedSieve = sieveList.find { s -> s.id == it.defaultSieveId }
-                    }
-                }
+                drink?.let { applyDrinkDefaults(it) }
             }
             loadLastPreferences()
             refreshSelectionData()
+        }
+    }
+
+    private suspend fun applyDrinkDefaults(drink: Drink) {
+        temperature = drink.defaultTemperature.toString()
+        coffeeWeight = drink.defaultCoffeeWeight.toString()
+        targetYield = drink.defaultTargetYield.toString()
+        grindSize = drink.defaultGrindSize.toString()
+        desiredBrewTime = drink.defaultDesiredTime.toString()
+        tamperPressure = drink.defaultTamperPressure.toString()
+        milkVolume = drink.defaultMilkVolume.toString()
+
+        resultBrewTime = drink.defaultDesiredTime.toInt().toString()
+        actualYield = drink.defaultTargetYield.toInt().toString()
+
+        // Pre-select coffee if defined for the drink
+        if (drink.defaultCoffeeId != null) {
+            val coffeeList = coffees.first { list -> list.isNotEmpty() }
+            selectedCoffee = coffeeList.find { c -> c.id == drink.defaultCoffeeId }
+        }
+
+        // Pre-select sieve if defined for the drink
+        if (drink.defaultSieveId != null) {
+            val sieveList = sieves.first { list -> list.isNotEmpty() }
+            selectedSieve = sieveList.find { s -> s.id == drink.defaultSieveId }
+        }
+    }
+
+    /** Re-check DB for newer version of same drink. If lastModified is newer, apply those values. */
+    fun refreshDrinkFromDb() {
+        val drink = selectedDrink ?: return
+        viewModelScope.launch {
+            val dbDrink = drinkDao.getDrinkById(drink.id) ?: return@launch
+            if (dbDrink.lastModified > drink.lastModified) {
+                selectedDrink = dbDrink
+                applyDrinkDefaults(dbDrink)
+                refreshSelectionData()
+            }
         }
     }
 

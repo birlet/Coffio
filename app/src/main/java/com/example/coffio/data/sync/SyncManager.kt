@@ -170,6 +170,11 @@ class SyncManager(private val context: Context) {
                     return@forEach
                 }
 
+                val sig = brewSignature(dto)
+                if (localSignatures.contains(sig)) {
+                    return@forEach
+                }
+
                 val coffeeId = syncedCoffeeIdByName[dto.coffeeName] ?: return@forEach
                 val sieveId = syncedSieveIdByName[dto.sieveName] ?: return@forEach
                 val drinkId = dto.drinkName?.let { syncedDrinkIdByName[it] }
@@ -193,10 +198,30 @@ class SyncManager(private val context: Context) {
                     )
                 )
                 localSyncKeys.add(syncKey)
+                localSignatures.add(sig)
                 inserted += 1
             }
 
             Result.success(inserted)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun clearServerDb(serverInput: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val baseUrl = normalizeServerBaseUrl(serverInput)
+                ?: return@withContext Result.failure(IllegalArgumentException("Invalid server address"))
+
+            val api = Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(OkHttpClient.Builder().build())
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
+                .create(SyncApiService::class.java)
+
+            api.deleteAllData()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

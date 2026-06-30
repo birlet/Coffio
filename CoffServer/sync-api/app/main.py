@@ -336,3 +336,14 @@ def sync(request: SyncRequest) -> SyncResponse:
                 for b in brews
             ],
         )
+
+
+@app.delete("/api/v1/data")
+def delete_all_data() -> dict[str, str]:
+    with Session(engine) as session:
+        session.query(Brew).delete()
+        session.query(Drink).delete()
+        session.query(Sieve).delete()
+        session.query(Coffee).delete()
+        session.commit()
+    return {"status": "deleted"}

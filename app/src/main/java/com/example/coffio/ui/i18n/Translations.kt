@@ -126,6 +126,10 @@ data class AppStrings(
     val resetDbTitle: String,
     val resetDbWarning: String,
     val confirmResetDb: String,
+    val clearServerDb: String,
+    val clearServerDbTitle: String,
+    val clearServerDbWarning: String,
+    val confirmClearServerDb: String,
 )
 
 val englishStrings = AppStrings(
@@ -247,6 +251,10 @@ val englishStrings = AppStrings(
     resetDbTitle = "Reset database?",
     resetDbWarning = "This will delete all local coffees, sieves, drinks, and brews. This cannot be undone.",
     confirmResetDb = "Reset DB",
+    clearServerDb = "Clear Server DB",
+    clearServerDbTitle = "Clear server database?",
+    clearServerDbWarning = "This will delete all data on the sync server. This cannot be undone.",
+    confirmClearServerDb = "Clear Server DB",
 )
 
 val germanStrings = AppStrings(
@@ -368,6 +376,10 @@ val germanStrings = AppStrings(
     resetDbTitle = "Datenbank zurücksetzen?",
     resetDbWarning = "Dies löscht alle lokalen Kaffees, Siebe, Getränke und Brühvorgänge. Nicht rückgängig zu machen.",
     confirmResetDb = "DB zurücksetzen",
+    clearServerDb = "Server-DB löschen",
+    clearServerDbTitle = "Server-Datenbank löschen?",
+    clearServerDbWarning = "Dies löscht alle Daten auf dem Sync-Server. Nicht rückgängig zu machen.",
+    confirmClearServerDb = "Server-DB löschen",
 )
 
 val LocalStrings = compositionLocalOf { englishStrings }
