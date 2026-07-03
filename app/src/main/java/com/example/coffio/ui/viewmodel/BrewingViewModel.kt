@@ -59,6 +59,28 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
         private set
     private val grindSizeModel = GrindSizeModel()
 
+    var brewParamsExpanded by mutableStateOf(false)
+        private set
+    var lastBrewExpanded by mutableStateOf(false)
+        private set
+
+    init {
+        viewModelScope.launch {
+            brewParamsExpanded = prefsManager.brewParamsExpandedFlow.first()
+            lastBrewExpanded = prefsManager.lastBrewExpandedFlow.first()
+        }
+    }
+
+    fun toggleBrewParamsExpanded() {
+        brewParamsExpanded = !brewParamsExpanded
+        viewModelScope.launch { prefsManager.setBrewParamsExpanded(brewParamsExpanded) }
+    }
+
+    fun toggleLastBrewExpanded() {
+        lastBrewExpanded = !lastBrewExpanded
+        viewModelScope.launch { prefsManager.setLastBrewExpanded(lastBrewExpanded) }
+    }
+
     fun onCoffeeSelected(coffee: Coffee?) {
         selectedCoffee = coffee
         persistDrinkSelection()
@@ -114,7 +136,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
             if (grindSizeModel.fit(brews)) {
                 val predicted = grindSizeModel.predict(target, desiredTime)
                 calculatedGrindSize = predicted?.let {
-                    String.format("%.1f", it)
+                    String.format(java.util.Locale.US, "%.1f", it)
                 }
             } else {
                 calculatedGrindSize = null

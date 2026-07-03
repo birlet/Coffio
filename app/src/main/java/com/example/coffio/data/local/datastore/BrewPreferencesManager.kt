@@ -33,6 +33,8 @@ class BrewPreferencesManager(private val context: Context) {
         val MILK_VOLUME = doublePreferencesKey("milk_volume")
         val GRIND_SIZE = doublePreferencesKey("grind_size")
         val BREW_TIME = intPreferencesKey("brew_time")
+        val BREW_PARAMS_EXPANDED = booleanPreferencesKey("brew_params_expanded")
+        val LAST_BREW_EXPANDED = booleanPreferencesKey("last_brew_expanded")
     }
 
     val brewPreferencesFlow: Flow<BrewPreferences> = context.dataStore.data
@@ -62,5 +64,19 @@ class BrewPreferencesManager(private val context: Context) {
             preferences[GRIND_SIZE] = prefs.grindSize
             preferences[BREW_TIME] = prefs.brewTime
         }
+    }
+
+    val brewParamsExpandedFlow: Flow<Boolean> = context.dataStore.data
+        .map { it[BREW_PARAMS_EXPANDED] ?: false }
+
+    val lastBrewExpandedFlow: Flow<Boolean> = context.dataStore.data
+        .map { it[LAST_BREW_EXPANDED] ?: false }
+
+    suspend fun setBrewParamsExpanded(expanded: Boolean) {
+        context.dataStore.edit { it[BREW_PARAMS_EXPANDED] = expanded }
+    }
+
+    suspend fun setLastBrewExpanded(expanded: Boolean) {
+        context.dataStore.edit { it[LAST_BREW_EXPANDED] = expanded }
     }
 }

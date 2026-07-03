@@ -113,22 +113,21 @@ fun BrewingScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Brewing Parameters — collapsible
-            var brewParamsExpanded by remember { mutableStateOf(false) }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { brewParamsExpanded = !brewParamsExpanded },
+                    .clickable { viewModel.toggleBrewParamsExpanded() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(strings.brewingParameters, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
-                    imageVector = if (brewParamsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    imageVector = if (viewModel.brewParamsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null
                 )
             }
 
-            AnimatedVisibility(visible = brewParamsExpanded) {
+            AnimatedVisibility(visible = viewModel.brewParamsExpanded) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         BrewInput(
@@ -178,44 +177,59 @@ fun BrewingScreen(
                 }
             }
 
-            Text(strings.lastBrew, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-
-            if (lastBrew != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        LastBrewMetric(
-                            label = strings.grindSizeLabel,
-                            value = String.format(Locale.US, "%.1f", lastBrew.grindSize),
-                            modifier = Modifier.weight(1f)
-                        )
-                        LastBrewMetric(
-                            label = strings.brewTimeLabel,
-                            value = lastBrew.brewTime.toString(),
-                            modifier = Modifier.weight(1f)
-                        )
-                        LastBrewMetric(
-                            label = strings.actualYieldLabel,
-                            value = String.format(Locale.US, "%.1f", lastBrew.actualYield),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    text = strings.noLastBrew,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            // Last Brew — collapsible
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.toggleLastBrewExpanded() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(strings.lastBrew, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = if (viewModel.lastBrewExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null
                 )
+            }
+
+            AnimatedVisibility(visible = viewModel.lastBrewExpanded) {
+                if (lastBrew != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            LastBrewMetric(
+                                label = strings.grindSizeLabel,
+                                value = String.format(Locale.US, "%.1f", lastBrew.grindSize),
+                                modifier = Modifier.weight(1f)
+                            )
+                            LastBrewMetric(
+                                label = strings.brewTimeLabel,
+                                value = lastBrew.brewTime.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                            LastBrewMetric(
+                                label = strings.actualYieldLabel,
+                                value = String.format(Locale.US, "%.1f", lastBrew.actualYield),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = strings.noLastBrew,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -439,7 +453,7 @@ fun WheelPicker(
     val visibleCount = 3
     val halfVisible = visibleCount / 2
 
-    val initialIndex = remember(items) {
+    val initialIndex = remember(items, value) {
         val idx = items.indexOf(value)
         if (idx != -1) idx else {
             val dValue = value.toDoubleOrNull()
@@ -452,10 +466,16 @@ fun WheelPicker(
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
-    // Report the initial resolved value so the ViewModel state is always in sync
-    LaunchedEffect(Unit) {
-        val idx = initialIndex.coerceIn(items.indices)
-        onValueChange(items[idx])
+    // Scroll to new value when it changes externally
+    LaunchedEffect(value) {
+        val targetIndex = items.indexOf(value)
+        val resolvedIndex = if (targetIndex != -1) targetIndex else {
+            val dValue = value.toDoubleOrNull()
+            if (dValue != null) items.indexOfFirst { it.toDoubleOrNull() == dValue } else -1
+        }
+        if (resolvedIndex != -1 && resolvedIndex != listState.firstVisibleItemIndex) {
+            listState.animateScrollToItem(resolvedIndex)
+        }
     }
 
     LaunchedEffect(listState.isScrollInProgress) {
@@ -463,21 +483,6 @@ fun WheelPicker(
             val idx = listState.firstVisibleItemIndex.coerceIn(items.indices)
             if (items[idx] != value) {
                 onValueChange(items[idx])
-            }
-        }
-    }
-
-    LaunchedEffect(value) {
-        val targetIndex = items.indexOf(value)
-        if (targetIndex != -1 && targetIndex != listState.firstVisibleItemIndex) {
-            listState.animateScrollToItem(targetIndex)
-        } else {
-            val dValue = value.toDoubleOrNull()
-            if (dValue != null) {
-                val numericIndex = items.indexOfFirst { it.toDoubleOrNull() == dValue }
-                if (numericIndex != -1 && numericIndex != listState.firstVisibleItemIndex) {
-                    listState.animateScrollToItem(numericIndex)
-                }
             }
         }
     }
