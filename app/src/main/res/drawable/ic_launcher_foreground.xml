@@ -4,33 +4,45 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- C -->
+    <!-- Cup body -->
     <path
-        android:fillColor="#0A260C"
-        android:pathData="M28,46 Q28,38 34,38 L38,38 L38,42 L34,42 Q32,42 32,46 L32,62 Q32,66 34,66 L38,66 L38,70 L34,70 Q28,70 28,62 Z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,42 L34,38 C34,36 36,34 38,34 L66,34 C68,34 70,36 70,38 L70,42 L72,42 C74,42 76,44 76,46 L76,50 C76,52 74,54 72,54 L70,54 L70,58 C70,64 66,70 54,70 L50,70 C38,70 34,64 34,58 Z" />
 
-    <!-- o -->
-    <path
-        android:fillColor="#0A260C"
-        android:pathData="M40,48 Q40,42 45,42 Q50,42 50,48 L50,62 Q50,70 45,70 Q40,70 40,62 Z M44,48 Q44,46 45,46 Q46,46 46,48 L46,62 Q46,66 45,66 Q44,66 44,62 Z" />
-
-    <!-- f -->
-    <path
-        android:fillColor="#0A260C"
-        android:pathData="M52,44 Q52,38 56,38 L58,38 L58,42 L56.5,42 Q56,42 56,44 L56,46 L58,46 L58,50 L56,50 L56,70 L52,70 L52,50 L51,50 L51,46 L52,46 Z" />
-
-    <!-- f -->
-    <path
-        android:fillColor="#0A260C"
-        android:pathData="M60,44 Q60,38 64,38 L66,38 L66,42 L64.5,42 Q64,42 64,44 L64,46 L66,46 L66,50 L64,50 L64,70 L60,70 L60,50 L59,50 L59,46 L60,46 Z" />
-
-    <!-- I -->
+    <!-- Cup body outline -->
     <path
         android:fillColor="#2E7D32"
-        android:pathData="M68,38 L72,38 L72,70 L68,70 Z" />
+        android:pathData="M34,38 C34,36 36,34 38,34 L66,34 C68,34 70,36 70,38 L70,42 L72,42 C75,42 77,44.5 77,47 L77,49 C77,51.5 75,54 72,54 L70,54 L70,58 C70,65 65,72 54,72 L50,72 C39,72 34,65 34,58 Z M38,38 L38,58 C38,62 42,68 50,68 L54,68 C62,68 66,62 66,58 L66,38 Z M70,46 L70,50 L72,50 C73,50 73,49 73,48 L73,48 C73,47 73,46 72,46 Z" />
 
-    <!-- O -->
+    <!-- Steam lines -->
+    <path
+        android:fillColor="#4CAF50"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.5"
+        android:pathData="M46,30 C46,28 48,26 48,24 C48,22 46,20 46,18" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.5"
+        android:pathData="M52,30 C52,28 54,26 54,24 C54,22 52,20 52,18" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.5"
+        android:pathData="M58,30 C58,28 60,26 60,24 C60,22 58,20 58,18" />
+
+    <!-- Saucer -->
     <path
         android:fillColor="#2E7D32"
-        android:pathData="M74,38 Q74,32 80,32 Q86,32 86,38 L86,62 Q86,70 80,70 Q74,70 74,62 Z M78,40 Q78,38 80,38 Q82,38 82,40 L82,62 Q82,66 80,66 Q78,66 78,62 Z" />
+        android:pathData="M30,74 C30,72 34,70 40,70 L64,70 C70,70 74,72 74,74 L74,76 C74,78 70,80 64,80 L40,80 C34,80 30,78 30,76 Z" />
+
+    <!-- Coffee fill inside cup -->
+    <path
+        android:fillColor="#5D4037"
+        android:pathData="M40,44 L64,44 L64,58 C64,61 61,66 54,66 L50,66 C43,66 40,61 40,58 Z" />
+
+    <!-- Foam on top -->
+    <path
+        android:fillColor="#EFEBE9"
+        android:pathData="M40,42 C44,40 48,44 52,42 C56,40 60,44 64,42 L64,46 C60,48 56,44 52,46 C48,48 44,44 40,46 Z" />
 </vector>
