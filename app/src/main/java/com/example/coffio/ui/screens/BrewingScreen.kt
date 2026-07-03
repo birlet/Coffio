@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -112,7 +113,7 @@ fun BrewingScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Brewing Parameters — collapsible
-            var brewParamsExpanded by remember { mutableStateOf(true) }
+            var brewParamsExpanded by remember { mutableStateOf(false) }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -177,40 +178,7 @@ fun BrewingScreen(
                 }
             }
 
-            // Row: "Letzter Bezug" title + Calculated Grind Size grey box
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    strings.lastBrew,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = MaterialTheme.shapes.small,
-                    tonalElevation = 1.dp
-                ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = strings.calculatedGrindSizeLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = viewModel.calculatedGrindSize ?: "---",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+            Text(strings.lastBrew, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
             if (lastBrew != null) {
                 Card(
@@ -266,6 +234,7 @@ fun BrewingScreen(
                         ?: viewModel.grindSize.ifEmpty { "0" },
                     items = grindOptions,
                     onValueChange = { viewModel.grindSize = it },
+                    highlightValue = viewModel.calculatedGrindSize,
                     modifier = Modifier.weight(1f)
                 )
                 WheelPicker(
@@ -285,6 +254,23 @@ fun BrewingScreen(
                     items = (0..200).map { it.toString() },
                     onValueChange = { viewModel.actualYield = it },
                     modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Legend
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = Color(0xFF4CAF50),
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier.size(12.dp)
+                ) {}
+                Text(
+                    text = strings.legendCalculatedGrindSize,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -446,6 +432,7 @@ fun WheelPicker(
     value: String,
     items: List<String>,
     onValueChange: (String) -> Unit,
+    highlightValue: String? = null,
     modifier: Modifier = Modifier
 ) {
     val itemHeight = 40.dp
@@ -529,6 +516,7 @@ fun WheelPicker(
                 }
                 items(items.size) { index ->
                     val isCenter = index == centeredDataIndex
+                    val isHighlighted = highlightValue != null && items[index] == highlightValue
                     Box(
                         modifier = Modifier
                             .height(itemHeight)
@@ -541,6 +529,8 @@ fun WheelPicker(
                             style = if (isCenter) MaterialTheme.typography.titleLarge
                             else MaterialTheme.typography.bodyLarge,
                             fontWeight = if (isCenter) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isHighlighted) Color(0xFF4CAF50)
+                            else Color.Unspecified,
                             textAlign = TextAlign.Center
                         )
                     }
