@@ -473,8 +473,12 @@ fun WheelPicker(
             val dValue = value.toDoubleOrNull()
             if (dValue != null) items.indexOfFirst { it.toDoubleOrNull() == dValue } else -1
         }
-        if (resolvedIndex != -1 && resolvedIndex != listState.firstVisibleItemIndex) {
-            listState.animateScrollToItem(resolvedIndex)
+        if (resolvedIndex != -1) {
+            if (resolvedIndex != listState.firstVisibleItemIndex) {
+                listState.animateScrollToItem(resolvedIndex)
+            }
+            // Sync resolved value back so ViewModel always reflects what's displayed
+            onValueChange(items[resolvedIndex])
         }
     }
 
