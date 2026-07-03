@@ -15,6 +15,9 @@ interface SieveDao {
     @Query("SELECT * FROM sieves WHERE name = :name LIMIT 1")
     suspend fun getSieveByName(name: String): Sieve?
 
+    @Query("SELECT * FROM sieves WHERE id = :id")
+    suspend fun getSieveById(id: Long): Sieve?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSieve(sieve: Sieve): Long
 

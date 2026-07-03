@@ -347,3 +347,46 @@ def delete_all_data() -> dict[str, str]:
         session.query(Coffee).delete()
         session.commit()
     return {"status": "deleted"}
+
+
+@app.delete("/api/v1/brews/{sync_key}")
+def delete_brew(sync_key: str) -> dict[str, str]:
+    with Session(engine) as session:
+        deleted = session.query(Brew).filter(Brew.sync_key == sync_key).delete()
+        session.commit()
+    if deleted == 0:
+        return {"status": "not_found"}
+    return {"status": "deleted"}
+
+
+@app.put("/api/v1/brews/{sync_key}", response_model=dict[str, str])
+def update_brew(sync_key: str, dto: BrewDto) -> dict[str, str]:
+    with Session(engine) as session:
+        brew = session.query(Brew).filter(Brew.sync_key == sync_key).one_or_none()
+        if brew is None:
+            return {"status": "not_found"}
+
+        coffee = get_or_create_coffee(session, dto.coffeeName)
+        sieve = get_or_create_sieve(session, dto.sieveName)
+        drink_id = None
+        if dto.drinkName:
+            drink = session.query(Drink).filter(Drink.name == dto.drinkName).one_or_none()
+            if drink:
+                drink_id = drink.id
+
+        brew.coffee_id = coffee.id
+        brew.sieve_id = sieve.id
+        brew.drink_id = drink_id
+        brew.temperature = dto.temperature
+        brew.coffee_weight = dto.coffeeWeight
+        brew.target_yield = dto.targetYield
+        brew.actual_yield = dto.actualYield
+        brew.tamper_pressure = dto.tamperPressure
+        brew.milk_volume = dto.milkVolume
+        brew.grind_size = dto.grindSize
+        brew.brew_time = dto.brewTime
+        brew.timestamp = dto.timestamp
+        brew.data_only = dto.dataOnly
+        brew.signature = brew_signature(dto)
+        session.commit()
+    return {"status": "updated"}

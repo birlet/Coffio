@@ -15,6 +15,9 @@ interface CoffeeDao {
     @Query("SELECT * FROM coffees WHERE name = :name LIMIT 1")
     suspend fun getCoffeeByName(name: String): Coffee?
 
+    @Query("SELECT * FROM coffees WHERE id = :id")
+    suspend fun getCoffeeById(id: Long): Coffee?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCoffee(coffee: Coffee): Long
 

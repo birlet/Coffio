@@ -58,6 +58,7 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var calculatedGrindSize by mutableStateOf<String?>(null)
         private set
     private val grindSizeModel = GrindSizeModel()
+    private var isSaving = false
 
     var brewParamsExpanded by mutableStateOf(false)
         private set
@@ -234,8 +235,10 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun saveBrew(onSuccess: () -> Unit, dataOnly: Boolean = false) {
+        if (isSaving) return
         val coffee = selectedCoffee ?: return
         val sieve = selectedSieve ?: return
+        isSaving = true
         
         val temp = temperature.toDoubleOrNull() ?: 0.0
         val weight = coffeeWeight.toDoubleOrNull() ?: 0.0

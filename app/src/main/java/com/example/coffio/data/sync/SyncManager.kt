@@ -25,15 +25,8 @@ class SyncManager(private val context: Context) {
 
     suspend fun sync(serverInput: String): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val baseUrl = normalizeServerBaseUrl(serverInput)
+            val api = buildApi(serverInput)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid server address"))
-
-            val api = Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .client(OkHttpClient.Builder().build())
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build()
-                .create(SyncApiService::class.java)
 
             val localCoffees = coffeeDao.getAllCoffeesList()
             val localSieves = sieveDao.getAllSievesList()
@@ -210,21 +203,45 @@ class SyncManager(private val context: Context) {
 
     suspend fun clearServerDb(serverInput: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val baseUrl = normalizeServerBaseUrl(serverInput)
+            val api = buildApi(serverInput)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid server address"))
-
-            val api = Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .client(OkHttpClient.Builder().build())
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build()
-                .create(SyncApiService::class.java)
-
             api.deleteAllData()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun deleteBrewOnServer(serverInput: String, syncKey: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val api = buildApi(serverInput)
+                ?: return@withContext Result.failure(IllegalArgumentException("Invalid server address"))
+            api.deleteBrew(syncKey)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateBrewOnServer(serverInput: String, syncKey: String, dto: SyncBrewDto): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val api = buildApi(serverInput)
+                ?: return@withContext Result.failure(IllegalArgumentException("Invalid server address"))
+            api.updateBrew(syncKey, dto)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun buildApi(serverInput: String): SyncApiService? {
+        val baseUrl = normalizeServerBaseUrl(serverInput) ?: return null
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(OkHttpClient.Builder().build())
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+            .create(SyncApiService::class.java)
     }
 
     private fun deviceId(): String {
