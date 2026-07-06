@@ -167,9 +167,14 @@ class SyncManager(private val context: Context) {
             }.toHashSet()
 
             var inserted = 0
+            val deletedSyncKeys = database.deletedBrewDao().getAllSyncKeys().toHashSet()
+
             response.brews.forEach { dto ->
                 val syncKey = dto.syncKey?.takeIf { it.isNotBlank() } ?: brewSignature(dto)
                 if (localSyncKeys.contains(syncKey)) {
+                    return@forEach
+                }
+                if (deletedSyncKeys.contains(syncKey)) {
                     return@forEach
                 }
 
@@ -205,6 +210,16 @@ class SyncManager(private val context: Context) {
                 localSignatures.add(sig)
                 inserted += 1
             }
+
+            // Sync deletions: delete from server any brews that were explicitly deleted locally
+            deletedSyncKeys.forEach { deletedSyncKey ->
+                try {
+                    api.deleteBrew(deletedSyncKey)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            database.deletedBrewDao().deleteAll()
 
             Result.success(inserted)
         } catch (e: Exception) {
@@ -302,10 +317,9 @@ class SyncManager(private val context: Context) {
     }
 
     private fun resolveLocalSource(dto: SyncBrewDto, currentDeviceId: String): BrewSource {
+        // Brews from server (not locally existing) are always REMOTE, except IMPORTED
         return when {
             dto.source == IMPORTED_SOURCE -> BrewSource.IMPORTED
-            dto.originDeviceId.isNullOrBlank() -> BrewSource.REMOTE
-            dto.originDeviceId == currentDeviceId -> BrewSource.LOCAL
             else -> BrewSource.REMOTE
         }
     }

@@ -8,6 +8,7 @@ import com.example.coffio.data.local.datastore.AppPreferencesManager
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.data.local.entities.BrewWithCoffee
+import com.example.coffio.data.local.entities.DeletedBrew
 import com.example.coffio.data.sync.SyncBrewDto
 import com.example.coffio.data.sync.SyncManager
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +36,9 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     fun deleteBrew(brew: Brew) {
         viewModelScope.launch {
             brewDao.deleteBrew(brew)
+            if (brew.syncKey.isNotBlank()) {
+                database.deletedBrewDao().insert(DeletedBrew(syncKey = brew.syncKey))
+            }
             if (brew.source != BrewSource.IMPORTED) {
                 syncDeleteToServer(brew.syncKey)
             }
