@@ -187,7 +187,7 @@ fun BrewingScreen(
                     .clickable { viewModel.toggleLastBrewExpanded() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(strings.lastBrew, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(strings.lastBrews, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     imageVector = if (viewModel.lastBrewExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -198,9 +198,8 @@ fun BrewingScreen(
             AnimatedVisibility(visible = viewModel.lastBrewExpanded) {
                 if (lastBrew != null) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        if (recentBrews.size > 1) {
-                            WheelPicker(
-                                label = strings.history,
+                        WheelPicker(
+                            label = strings.brews,
                                 value = lastBrew.syncKey,
                                 items = recentBrews.map { it.syncKey },
                                 onValueChange = viewModel::selectLastBrew,
@@ -214,37 +213,22 @@ fun BrewingScreen(
                                         ?: Color.Unspecified
                                 },
                                 modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        )
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = brewColor(lastBrew.source).copy(alpha = 0.45f)
-                            )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                LastBrewMetric(
-                                    label = strings.grindSizeLabel,
-                                    value = String.format(Locale.US, "%.1f", lastBrew.grindSize),
-                                    modifier = Modifier.weight(1f)
-                                )
-                                LastBrewMetric(
-                                    label = strings.brewTimeLabel,
-                                    value = lastBrew.brewTime.toString(),
-                                    modifier = Modifier.weight(1f)
-                                )
-                                LastBrewMetric(
-                                    label = strings.actualYieldLabel,
-                                    value = String.format(Locale.US, "%.1f", lastBrew.actualYield),
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
+                            Surface(
+                                color = brewColor(lastBrew.source),
+                                shape = MaterialTheme.shapes.extraSmall,
+                                modifier = Modifier.size(12.dp)
+                            ) {}
+                            Text(
+                                text = brewSourceLabel(lastBrew.source, strings.serverBrewLabel, strings.importedBrewLabel, strings.ownBrew),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 } else {
@@ -261,38 +245,42 @@ fun BrewingScreen(
             // Post-Brewing
             Text(strings.result, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            val grindOptions = remember { (0..500).map { String.format(Locale.US, "%.1f", it / 10.0) } }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val grindOptions = remember { (0..500).map { String.format(Locale.US, "%.1f", it / 10.0) } }
-                WheelPicker(
-                    label = strings.grindSizeLabel,
-                    value = viewModel.calculatedGrindSize
-                        ?: viewModel.grindSize.ifEmpty { "0" },
-                    items = grindOptions,
-                    onValueChange = { viewModel.grindSize = it },
-                    highlightValue = viewModel.calculatedGrindSize,
-                    modifier = Modifier.weight(1f)
-                )
-                WheelPicker(
-                    label = strings.brewTimeLabel,
-                    value = viewModel.resultBrewTime.ifEmpty { 
-                        viewModel.desiredBrewTime.ifEmpty { "0" }
-                    },
-                    items = (0..120).map { it.toString() },
-                    onValueChange = { viewModel.resultBrewTime = it },
-                    modifier = Modifier.weight(1f)
-                )
-                WheelPicker(
-                    label = strings.actualYieldLabel,
-                    value = viewModel.actualYield.ifEmpty {
-                        viewModel.targetYield.ifEmpty { "0" }
-                    },
-                    items = (0..200).map { it.toString() },
-                    onValueChange = { viewModel.actualYield = it },
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    WheelPicker(
+                        label = strings.grindSizeLabel,
+                        value = viewModel.calculatedGrindSize
+                            ?: viewModel.grindSize.ifEmpty { "0" },
+                        items = grindOptions,
+                        onValueChange = { viewModel.grindSize = it },
+                        highlightValue = viewModel.calculatedGrindSize,
+                        modifier = Modifier.weight(1f)
+                    )
+                    WheelPicker(
+                        label = strings.brewTimeLabel,
+                        value = viewModel.resultBrewTime.ifEmpty { 
+                            viewModel.desiredBrewTime.ifEmpty { "0" }
+                        },
+                        items = (0..120).map { it.toString() },
+                        onValueChange = { viewModel.resultBrewTime = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    WheelPicker(
+                        label = strings.actualYieldLabel,
+                        value = viewModel.actualYield.ifEmpty {
+                            viewModel.targetYield.ifEmpty { "0" }
+                        },
+                        items = (0..200).map { it.toString() },
+                        onValueChange = { viewModel.actualYield = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             // Legend
@@ -596,11 +584,21 @@ private fun brewColor(source: BrewSource): Color {
     }
 }
 
+private fun brewSourceLabel(source: BrewSource, serverLabel: String, importedLabel: String, ownLabel: String): String {
+    return when (source) {
+        BrewSource.LOCAL -> ownLabel
+        BrewSource.REMOTE -> serverLabel
+        BrewSource.IMPORTED -> importedLabel
+    }
+}
+
 private fun formatLastBrewWheelLabel(brew: Brew): String {
     return buildString {
-        append(String.format(Locale.US, "%.1f", brew.actualYield))
-        append("g • ")
+        append(String.format(Locale.US, "%.1f", brew.grindSize))
+        append(" • ")
         append(brew.brewTime)
-        append("s")
+        append("s • ")
+        append(String.format(Locale.US, "%.1f", brew.actualYield))
+        append("g")
     }
 }
