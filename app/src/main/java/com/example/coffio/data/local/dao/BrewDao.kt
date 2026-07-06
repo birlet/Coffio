@@ -21,6 +21,12 @@ interface BrewDao {
     @Query("SELECT * FROM brews ORDER BY timestamp DESC")
     fun getAllBrewsIncludingDataOnly(): Flow<List<Brew>>
 
+    @Query("SELECT * FROM brews WHERE source != 'REMOTE' ORDER BY timestamp DESC")
+    fun getAllBrewsForCalculations(): Flow<List<Brew>>
+
+    @Query("SELECT * FROM brews WHERE source = 'LOCAL' ORDER BY timestamp DESC")
+    fun getAllLocalBrewsForConsumption(): Flow<List<Brew>>
+
     @Query("SELECT * FROM brews")
     suspend fun getAllBrewsList(): List<Brew>
 
@@ -36,7 +42,7 @@ interface BrewDao {
     @Query("DELETE FROM brews")
     suspend fun deleteAllBrews()
 
-    @Query("SELECT * FROM brews WHERE coffeeId = :coffeeId AND sieveId = :sieveId")
+    @Query("SELECT * FROM brews WHERE coffeeId = :coffeeId AND sieveId = :sieveId ORDER BY timestamp DESC")
     suspend fun getBrewsByCoffeeAndSieve(coffeeId: Long, sieveId: Long): List<Brew>
 
     @Query("SELECT * FROM brews WHERE coffeeId = :coffeeId AND sieveId = :sieveId ORDER BY timestamp DESC LIMIT 1")

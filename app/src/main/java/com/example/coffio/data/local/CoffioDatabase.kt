@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.coffio.data.local.dao.BrewDao
 import com.example.coffio.data.local.dao.CoffeeDao
 import com.example.coffio.data.local.dao.DrinkDao
@@ -13,7 +14,8 @@ import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
 
-@Database(entities = [Coffee::class, Sieve::class, Brew::class, Drink::class], version = 10, exportSchema = false)
+@Database(entities = [Coffee::class, Sieve::class, Brew::class, Drink::class], version = 11, exportSchema = false)
+@TypeConverters(BrewSourceConverters::class)
 abstract class CoffioDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun sieveDao(): SieveDao

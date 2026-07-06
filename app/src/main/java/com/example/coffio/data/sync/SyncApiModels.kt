@@ -59,5 +59,7 @@ data class SyncBrewDto(
     val grindSize: Double,
     val brewTime: Int,
     val timestamp: Long,
-    val dataOnly: Boolean
+    val dataOnly: Boolean,
+    val source: String? = null,
+    val originDeviceId: String? = null
 )

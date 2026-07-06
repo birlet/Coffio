@@ -67,6 +67,8 @@ data class AppStrings(
     val milkDetail: String,
     val tempDetail: String,
     val timeDetail: String,
+    val serverBrewLabel: String,
+    val importedBrewLabel: String,
 
     // Charts Screen
     val chartsTitle: String,
@@ -193,6 +195,8 @@ val englishStrings = AppStrings(
     milkDetail = "Milk",
     tempDetail = "Temp",
     timeDetail = "Time",
+    serverBrewLabel = "Server",
+    importedBrewLabel = "Data only",
 
     // Charts Screen
     chartsTitle = "Charts",
@@ -319,6 +323,8 @@ val germanStrings = AppStrings(
     milkDetail = "Milch",
     tempDetail = "Temp",
     timeDetail = "Zeit",
+    serverBrewLabel = "Server",
+    importedBrewLabel = "Nur Daten",
 
     // Charts Screen
     chartsTitle = "Diagramme",

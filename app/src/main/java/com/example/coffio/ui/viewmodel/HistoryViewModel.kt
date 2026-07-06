@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.coffio.data.local.CoffioDatabase
 import com.example.coffio.data.local.datastore.AppPreferencesManager
 import com.example.coffio.data.local.entities.Brew
+import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.data.local.entities.BrewWithCoffee
 import com.example.coffio.data.sync.SyncBrewDto
 import com.example.coffio.data.sync.SyncManager
@@ -34,7 +35,9 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     fun deleteBrew(brew: Brew) {
         viewModelScope.launch {
             brewDao.deleteBrew(brew)
-            syncDeleteToServer(brew.syncKey)
+            if (brew.source != BrewSource.IMPORTED) {
+                syncDeleteToServer(brew.syncKey)
+            }
         }
     }
 
@@ -51,6 +54,9 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun syncUpdateToServer(brew: Brew) {
+        if (brew.source == BrewSource.IMPORTED) {
+            return
+        }
         val server = serverIfEnabled() ?: return
         val coffeeName = coffeeDao.getCoffeeById(brew.coffeeId)?.name ?: return
         val sieveName = sieveDao.getSieveById(brew.sieveId)?.name ?: return
@@ -72,7 +78,8 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
                 grindSize = brew.grindSize,
                 brewTime = brew.brewTime,
                 timestamp = brew.timestamp,
-                dataOnly = brew.dataOnly
+                dataOnly = brew.dataOnly,
+                source = brew.source.name
             )
         )
     }

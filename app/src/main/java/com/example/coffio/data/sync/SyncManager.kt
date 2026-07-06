@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import com.example.coffio.data.local.CoffioDatabase
 import com.example.coffio.data.local.entities.Brew
+import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
@@ -23,10 +24,15 @@ class SyncManager(private val context: Context) {
     private val sieveDao = database.sieveDao()
     private val drinkDao = database.drinkDao()
 
+    companion object {
+        private const val IMPORTED_SOURCE = "IMPORTED"
+    }
+
     suspend fun sync(serverInput: String): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val api = buildApi(serverInput)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid server address"))
+            val currentDeviceId = deviceId()
 
             val localCoffees = coffeeDao.getAllCoffeesList()
             val localSieves = sieveDao.getAllSievesList()
@@ -39,7 +45,7 @@ class SyncManager(private val context: Context) {
 
             val response = api.sync(
                 SyncRequestDto(
-                    deviceId = deviceId(),
+                    deviceId = currentDeviceId,
                     coffees = localCoffees.map { SyncCoffeeDto(name = it.name) },
                     sieves = localSieves.map { SyncSieveDto(name = it.name) },
                     drinks = localDrinks.map { drink ->
@@ -74,7 +80,9 @@ class SyncManager(private val context: Context) {
                             grindSize = brew.grindSize,
                             brewTime = brew.brewTime,
                             timestamp = brew.timestamp,
-                            dataOnly = brew.dataOnly
+                            dataOnly = brew.dataOnly,
+                            source = brew.source.name,
+                            originDeviceId = currentDeviceId.takeIf { brew.source != BrewSource.IMPORTED }
                         )
                     }
                 )
@@ -151,7 +159,9 @@ class SyncManager(private val context: Context) {
                         grindSize = brew.grindSize,
                         brewTime = brew.brewTime,
                         timestamp = brew.timestamp,
-                        dataOnly = brew.dataOnly
+                        dataOnly = brew.dataOnly,
+                        source = brew.source.name,
+                        originDeviceId = currentDeviceId.takeIf { brew.source != BrewSource.IMPORTED }
                     )
                 )
             }.toHashSet()
@@ -187,6 +197,7 @@ class SyncManager(private val context: Context) {
                         brewTime = dto.brewTime,
                         timestamp = dto.timestamp,
                         dataOnly = dto.dataOnly,
+                        source = resolveLocalSource(dto, currentDeviceId),
                         syncKey = syncKey
                     )
                 )
@@ -288,5 +299,14 @@ class SyncManager(private val context: Context) {
         val digest = MessageDigest.getInstance("SHA-256")
         val bytes = digest.digest(raw.toByteArray(Charsets.UTF_8))
         return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun resolveLocalSource(dto: SyncBrewDto, currentDeviceId: String): BrewSource {
+        return when {
+            dto.source == IMPORTED_SOURCE -> BrewSource.IMPORTED
+            dto.originDeviceId.isNullOrBlank() -> BrewSource.REMOTE
+            dto.originDeviceId == currentDeviceId -> BrewSource.LOCAL
+            else -> BrewSource.REMOTE
+        }
     }
 }

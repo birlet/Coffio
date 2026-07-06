@@ -64,6 +64,8 @@ class Brew(Base):
     brew_time: Mapped[int] = mapped_column(Integer, nullable=False)
     timestamp: Mapped[int] = mapped_column(BigInteger, nullable=False)
     data_only: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    source: Mapped[str] = mapped_column(String(16), default="LOCAL", nullable=False)
+    origin_device_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     signature: Mapped[str] = mapped_column(String(64), nullable=False)
 
     coffee: Mapped[Coffee] = relationship(Coffee)
@@ -108,6 +110,8 @@ class BrewDto(BaseModel):
     brewTime: int
     timestamp: int
     dataOnly: bool = False
+    source: Optional[str] = None
+    originDeviceId: Optional[str] = None
 
 
 class SyncRequest(BaseModel):
@@ -138,6 +142,12 @@ def migrate_schema() -> None:
                 connection.execute(text("UPDATE brews SET sync_key = signature || '-' || id::text WHERE sync_key IS NULL"))
                 connection.execute(text("ALTER TABLE brews ALTER COLUMN sync_key SET NOT NULL"))
                 connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_brews_sync_key ON brews(sync_key)"))
+            if "source" not in column_names:
+                connection.execute(text("ALTER TABLE brews ADD COLUMN source VARCHAR(16) DEFAULT 'LOCAL'"))
+                connection.execute(text("UPDATE brews SET source = 'LOCAL' WHERE source IS NULL"))
+                connection.execute(text("ALTER TABLE brews ALTER COLUMN source SET NOT NULL"))
+            if "origin_device_id" not in column_names:
+                connection.execute(text("ALTER TABLE brews ADD COLUMN origin_device_id VARCHAR(255)"))
 
 
 migrate_schema()
@@ -197,6 +207,7 @@ def health() -> dict[str, str]:
 @app.post("/api/v1/sync", response_model=SyncResponse)
 def sync(request: SyncRequest) -> SyncResponse:
     with Session(engine) as session:
+        current_device_id = request.deviceId.strip() if request.deviceId else None
         for coffee_dto in request.coffees:
             if coffee_dto.name.strip():
                 get_or_create_coffee(session, coffee_dto.name.strip())
@@ -282,6 +293,8 @@ def sync(request: SyncRequest) -> SyncResponse:
                     brew_time=brew_dto.brewTime,
                     timestamp=brew_dto.timestamp,
                     data_only=brew_dto.dataOnly,
+                    source=(brew_dto.source or "LOCAL").upper(),
+                    origin_device_id=brew_dto.originDeviceId or current_device_id,
                     signature=signature,
                 )
             )
@@ -332,6 +345,8 @@ def sync(request: SyncRequest) -> SyncResponse:
                     brewTime=b.brew_time,
                     timestamp=b.timestamp,
                     dataOnly=b.data_only,
+                    source=b.source,
+                    originDeviceId=b.origin_device_id,
                 )
                 for b in brews
             ],
@@ -387,6 +402,9 @@ def update_brew(sync_key: str, dto: BrewDto) -> dict[str, str]:
         brew.brew_time = dto.brewTime
         brew.timestamp = dto.timestamp
         brew.data_only = dto.dataOnly
+        brew.source = (dto.source or brew.source or "LOCAL").upper()
+        if dto.originDeviceId is not None:
+            brew.origin_device_id = dto.originDeviceId
         brew.signature = brew_signature(dto)
         session.commit()
     return {"status": "updated"}

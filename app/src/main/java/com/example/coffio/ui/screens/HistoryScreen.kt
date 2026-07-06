@@ -14,11 +14,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.BrewWithCoffee
 import com.example.coffio.ui.i18n.LocalStrings
@@ -131,6 +132,7 @@ fun BrewItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val strings = LocalStrings.current
     val brew = brewWithCoffee.brew
     val coffee = brewWithCoffee.coffee
     val sieve = brewWithCoffee.sieve
@@ -141,7 +143,7 @@ fun BrewItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (brew.dataOnly) Color(0xFFE0E0E0) else Color(0xFFE8F5E9)
+            containerColor = brewColor(brew.source)
         )
     ) {
         Column(
@@ -168,6 +170,13 @@ fun BrewItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    if (brew.source != BrewSource.LOCAL) {
+                        Text(
+                            text = brewSourceLabel(brew.source, strings.serverBrewLabel, strings.importedBrewLabel),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
                 Row {
                     IconButton(onClick = onEdit) {
@@ -209,6 +218,22 @@ fun BrewItem(
                 DetailColumn(s.tempDetail, "${brew.temperature}°C")
             }
         }
+    }
+}
+
+private fun brewColor(source: BrewSource): Color {
+    return when (source) {
+        BrewSource.LOCAL -> Color(0xFFE8F5E9)
+        BrewSource.REMOTE -> Color(0xFFE3F2FD)
+        BrewSource.IMPORTED -> Color(0xFFE0E0E0)
+    }
+}
+
+private fun brewSourceLabel(source: BrewSource, serverLabel: String, importedLabel: String): String {
+    return when (source) {
+        BrewSource.LOCAL -> ""
+        BrewSource.REMOTE -> serverLabel
+        BrewSource.IMPORTED -> importedLabel
     }
 }
 

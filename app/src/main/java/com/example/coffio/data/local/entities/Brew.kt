@@ -6,6 +6,12 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
+enum class BrewSource {
+    LOCAL,
+    REMOTE,
+    IMPORTED
+}
+
 @Entity(
     tableName = "brews",
     indices = [Index(value = ["syncKey"], unique = true)],
@@ -45,5 +51,6 @@ data class Brew(
     val brewTime: Int = 0, // in seconds
     val timestamp: Long = System.currentTimeMillis(),
     val dataOnly: Boolean = false,
+    val source: BrewSource = BrewSource.LOCAL,
     val syncKey: String = UUID.randomUUID().toString()
 )

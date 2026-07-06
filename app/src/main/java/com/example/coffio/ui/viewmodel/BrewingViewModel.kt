@@ -12,8 +12,9 @@ import com.example.coffio.data.local.datastore.BrewPreferences
 import com.example.coffio.data.local.datastore.BrewPreferencesManager
 import com.example.coffio.data.local.entities.Brew
 import com.example.coffio.data.local.entities.Coffee
-import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.data.local.entities.Drink
+import com.example.coffio.data.local.entities.BrewSource
+import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.data.model.GrindSizeModel
 import com.example.coffio.data.sync.SyncManager
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +44,8 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
     var selectedSieve by mutableStateOf<Sieve?>(null)
     var selectedDrink by mutableStateOf<Drink?>(null)
     var lastBrew by mutableStateOf<Brew?>(null)
+        private set
+    var recentBrews by mutableStateOf<List<Brew>>(emptyList())
         private set
     
     var temperature by mutableStateOf("")
@@ -118,12 +121,19 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
 
         if (coffee == null || sieve == null) {
             lastBrew = null
+            recentBrews = emptyList()
             return
         }
 
         viewModelScope.launch {
-            lastBrew = brewDao.getLastBrewByCoffeeAndSieve(coffee.id, sieve.id)
+            val brews = brewDao.getBrewsByCoffeeAndSieve(coffee.id, sieve.id)
+            recentBrews = brews
+            lastBrew = brews.firstOrNull()
         }
+    }
+
+    fun selectLastBrew(syncKey: String) {
+        lastBrew = recentBrews.firstOrNull { it.syncKey == syncKey }
     }
 
     fun updateCalculatedGrindSize() {
@@ -263,10 +273,12 @@ class BrewingViewModel(application: Application) : AndroidViewModel(application)
                 grindSize = grind,
                 brewTime = time,
                 dataOnly = dataOnly,
+                source = BrewSource.LOCAL,
                 syncKey = UUID.randomUUID().toString()
             )
             brewDao.insertBrew(brew)
             lastBrew = brew
+            recentBrews = listOf(brew) + recentBrews.filterNot { it.syncKey == brew.syncKey }
             
             // Save preferences
             prefsManager.saveBrewPreferences(

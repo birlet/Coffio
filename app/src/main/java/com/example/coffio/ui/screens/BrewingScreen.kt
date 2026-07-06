@@ -26,6 +26,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coffio.data.local.entities.Brew
+import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.ui.components.SelectionDropdown
 import com.example.coffio.ui.i18n.LocalStrings
 import com.example.coffio.ui.viewmodel.BrewingViewModel
@@ -43,6 +45,7 @@ fun BrewingScreen(
     val sieves by viewModel.sieves.collectAsState()
     val strings = LocalStrings.current
     val lastBrew = viewModel.lastBrew
+    val recentBrews = viewModel.recentBrews
 
     var showAddCoffeeDialog by remember { mutableStateOf(false) }
     var showAddSieveDialog by remember { mutableStateOf(false) }
@@ -194,33 +197,54 @@ fun BrewingScreen(
 
             AnimatedVisibility(visible = viewModel.lastBrewExpanded) {
                 if (lastBrew != null) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (recentBrews.size > 1) {
+                            WheelPicker(
+                                label = strings.history,
+                                value = lastBrew.syncKey,
+                                items = recentBrews.map { it.syncKey },
+                                onValueChange = viewModel::selectLastBrew,
+                                itemLabel = { syncKey ->
+                                    recentBrews.firstOrNull { it.syncKey == syncKey }?.let { brew ->
+                                        formatLastBrewWheelLabel(brew)
+                                    } ?: syncKey
+                                },
+                                itemColor = { syncKey ->
+                                    recentBrews.firstOrNull { it.syncKey == syncKey }?.let { brewColor(it.source) }
+                                        ?: Color.Unspecified
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = brewColor(lastBrew.source).copy(alpha = 0.45f)
+                            )
                         ) {
-                            LastBrewMetric(
-                                label = strings.grindSizeLabel,
-                                value = String.format(Locale.US, "%.1f", lastBrew.grindSize),
-                                modifier = Modifier.weight(1f)
-                            )
-                            LastBrewMetric(
-                                label = strings.brewTimeLabel,
-                                value = lastBrew.brewTime.toString(),
-                                modifier = Modifier.weight(1f)
-                            )
-                            LastBrewMetric(
-                                label = strings.actualYieldLabel,
-                                value = String.format(Locale.US, "%.1f", lastBrew.actualYield),
-                                modifier = Modifier.weight(1f)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                LastBrewMetric(
+                                    label = strings.grindSizeLabel,
+                                    value = String.format(Locale.US, "%.1f", lastBrew.grindSize),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                LastBrewMetric(
+                                    label = strings.brewTimeLabel,
+                                    value = lastBrew.brewTime.toString(),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                LastBrewMetric(
+                                    label = strings.actualYieldLabel,
+                                    value = String.format(Locale.US, "%.1f", lastBrew.actualYield),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 } else {
@@ -447,6 +471,8 @@ fun WheelPicker(
     items: List<String>,
     onValueChange: (String) -> Unit,
     highlightValue: String? = null,
+    itemLabel: (String) -> String = { it },
+    itemColor: (String) -> Color = { Color.Unspecified },
     modifier: Modifier = Modifier
 ) {
     val itemHeight = 40.dp
@@ -534,12 +560,12 @@ fun WheelPicker(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = items[index],
+                            text = itemLabel(items[index]),
                             style = if (isCenter) MaterialTheme.typography.titleLarge
                             else MaterialTheme.typography.bodyLarge,
                             fontWeight = if (isCenter) FontWeight.Bold else FontWeight.Normal,
                             color = if (isHighlighted) Color(0xFF4CAF50)
-                            else Color.Unspecified,
+                            else itemColor(items[index]),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -559,5 +585,22 @@ fun WheelPicker(
                 HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
             }
         }
+    }
+}
+
+private fun brewColor(source: BrewSource): Color {
+    return when (source) {
+        BrewSource.LOCAL -> Color(0xFFE8F5E9)
+        BrewSource.REMOTE -> Color(0xFFE3F2FD)
+        BrewSource.IMPORTED -> Color(0xFFE0E0E0)
+    }
+}
+
+private fun formatLastBrewWheelLabel(brew: Brew): String {
+    return buildString {
+        append(String.format(Locale.US, "%.1f", brew.actualYield))
+        append("g • ")
+        append(brew.brewTime)
+        append("s")
     }
 }

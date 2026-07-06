@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coffio.data.local.CoffioDatabase
 import com.example.coffio.data.local.entities.Brew
+import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Sieve
 import com.example.coffio.data.model.GrindSizeModel
@@ -96,7 +97,7 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            brewDao.getAllBrews().collectLatest { brews ->
+            brewDao.getAllLocalBrewsForConsumption().collectLatest { brews ->
                 _allBrews.value = brews
                 updateConsumption()
             }
@@ -108,7 +109,7 @@ class ChartsViewModel(application: Application) : AndroidViewModel(application) 
         updateConsumption()
         viewModelScope.launch {
             brewDao.getAllBrewsIncludingDataOnly().collectLatest { allBrews ->
-                _brews.value = allBrews.filter { it.coffeeId == coffee.id }
+                _brews.value = allBrews.filter { it.coffeeId == coffee.id && it.source != BrewSource.REMOTE }
                     .sortedBy { it.timestamp }
             }
         }

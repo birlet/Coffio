@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.example.coffio.data.local.CoffioDatabase
 import com.example.coffio.data.local.entities.Brew
+import com.example.coffio.data.local.entities.BrewSource
 import com.example.coffio.data.local.entities.Coffee
 import com.example.coffio.data.local.entities.Drink
 import com.example.coffio.data.local.entities.Sieve
@@ -141,9 +142,9 @@ class ExportImportManager(private val context: Context) {
 
                     // Export Brews
                     writer.write("\nTABLE:BREWS\n")
-                    writer.write("id,coffeeId,sieveId,temperature,coffeeWeight,targetYield,actualYield,tamperPressure,milkVolume,grindSize,brewTime,timestamp,dataOnly,syncKey\n")
+                    writer.write("id,coffeeId,sieveId,temperature,coffeeWeight,targetYield,actualYield,tamperPressure,milkVolume,grindSize,brewTime,timestamp,dataOnly,source,syncKey\n")
                     brewDao.getAllBrewsList().forEach {
-                        writer.write("${it.id},${it.coffeeId},${it.sieveId},${it.temperature},${it.coffeeWeight},${it.targetYield},${it.actualYield},${it.tamperPressure},${it.milkVolume},${it.grindSize},${it.brewTime},${it.timestamp},${if (it.dataOnly) 1 else 0},${escapeCsv(it.syncKey)}\n")
+                        writer.write("${it.id},${it.coffeeId},${it.sieveId},${it.temperature},${it.coffeeWeight},${it.targetYield},${it.actualYield},${it.tamperPressure},${it.milkVolume},${it.grindSize},${it.brewTime},${it.timestamp},${if (it.dataOnly) 1 else 0},${it.source.name},${escapeCsv(it.syncKey)}\n")
                     }
                 }
             }
@@ -201,7 +202,8 @@ class ExportImportManager(private val context: Context) {
                                             brewTime = parts[10].toInt(),
                                             timestamp = parts[11].toLong(),
                                             dataOnly = if (parts.size >= 13) parts[12].trim() == "1" else false,
-                                            syncKey = if (parts.size >= 14) unescapeCsv(parts[13]) else UUID.randomUUID().toString()
+                                            source = if (parts.size >= 14) parseSource(parts[13]) else BrewSource.IMPORTED,
+                                            syncKey = if (parts.size >= 15) unescapeCsv(parts[14]) else UUID.randomUUID().toString()
                                         ))
                                     }
                                 }
@@ -238,5 +240,13 @@ class ExportImportManager(private val context: Context) {
             result = result.substring(1, result.length - 1).replace("\"\"", "\"")
         }
         return result
+    }
+
+    private fun parseSource(value: String): BrewSource {
+        return try {
+            BrewSource.valueOf(unescapeCsv(value).ifBlank { BrewSource.IMPORTED.name })
+        } catch (_: IllegalArgumentException) {
+            BrewSource.IMPORTED
+        }
     }
 }
