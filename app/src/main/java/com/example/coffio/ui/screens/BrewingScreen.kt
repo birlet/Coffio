@@ -200,19 +200,17 @@ fun BrewingScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         WheelPicker(
                             label = "",
-                                value = lastBrew.syncKey,
-                                items = recentBrews.map { it.syncKey },
-                                onValueChange = viewModel::selectLastBrew,
-                                itemLabel = { syncKey ->
-                                    recentBrews.firstOrNull { it.syncKey == syncKey }?.let { brew ->
-                                        formatLastBrewWheelLabel(brew)
-                                    } ?: syncKey
-                                },
-                                itemColor = { syncKey ->
-                                    recentBrews.firstOrNull { it.syncKey == syncKey }?.let { brewColor(it.source) }
-                                        ?: Color.Unspecified
-                                },
-                                modifier = Modifier.fillMaxWidth()
+                            value = lastBrew.syncKey,
+                            items = recentBrews.map { it.syncKey },
+                            onValueChange = viewModel::selectLastBrew,
+                            itemLabel = { syncKey ->
+                                recentBrews.firstOrNull { it.syncKey == syncKey }?.let { brew ->
+                                    formatLastBrewWheelLabel(brew)
+                                } ?: syncKey
+                            },
+                            itemHeightDp = 32,
+                            visibleItems = 3,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 } else {
@@ -445,10 +443,12 @@ fun WheelPicker(
     highlightValue: String? = null,
     itemLabel: (String) -> String = { it },
     itemColor: (String) -> Color = { Color.Unspecified },
+    itemHeightDp: Int = 40,
+    visibleItems: Int = 3,
     modifier: Modifier = Modifier
 ) {
-    val itemHeight = 40.dp
-    val visibleCount = 3
+    val itemHeight = itemHeightDp.dp
+    val visibleCount = visibleItems
     val halfVisible = visibleCount / 2
 
     val initialIndex = remember(items, value) {
