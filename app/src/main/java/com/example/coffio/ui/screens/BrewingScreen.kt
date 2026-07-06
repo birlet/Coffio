@@ -199,7 +199,7 @@ fun BrewingScreen(
                 if (lastBrew != null) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         WheelPicker(
-                            label = strings.brews,
+                            label = "",
                                 value = lastBrew.syncKey,
                                 items = recentBrews.map { it.syncKey },
                                 onValueChange = viewModel::selectLastBrew,
@@ -214,28 +214,12 @@ fun BrewingScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                         )
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                color = brewColor(lastBrew.source),
-                                shape = MaterialTheme.shapes.extraSmall,
-                                modifier = Modifier.size(12.dp)
-                            ) {}
-                            Text(
-                                text = brewSourceLabel(lastBrew.source, strings.serverBrewLabel, strings.importedBrewLabel, strings.ownBrew),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                     }
                 } else {
                     Text(
                         text = strings.noLastBrew,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -247,7 +231,7 @@ fun BrewingScreen(
 
             val grindOptions = remember { (0..500).map { String.format(Locale.US, "%.1f", it / 10.0) } }
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
